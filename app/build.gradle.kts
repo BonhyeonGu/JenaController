@@ -21,8 +21,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("org.apache.jena", "apache-jena-libs", "4.8.0")
+    // implementation("com.google.guava:guava:31.1-jre")
+    implementation("ch.qos.logback:logback-classic:1.4.9") // Logback Classic
+    implementation("org.slf4j:slf4j-api:2.0.7") // SLF4J API
+    implementation("org.apache.jena", "apache-jena-libs", "4.9.0")
 }
 
 application {
