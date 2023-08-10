@@ -6,6 +6,14 @@
  * User Manual available at https://docs.gradle.org/8.0.2/userguide/building_java_projects.html
  */
 
+
+import org.gradle.api.tasks.JavaExec
+
+tasks.withType(JavaExec::class.java) {
+    jvmArgs("-Xms2048m", "-Xmx2048m")
+}
+
+
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -35,4 +43,9 @@ application {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks.withType<JavaCompile> {
+    options.isFork = true
+    options.forkOptions.jvmArgs = listOf("-Xmx2048m")
 }
