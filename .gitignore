@@ -32,3 +32,8 @@ build/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+#Jena
+_db/
+*.owl
+*.rdf
