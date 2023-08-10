@@ -10,7 +10,7 @@
 import org.gradle.api.tasks.JavaExec
 
 tasks.withType(JavaExec::class.java) {
-    jvmArgs("-Xms2048m", "-Xmx2048m")
+    jvmArgs("-Xms1024m", "-Xmx1024m")
 }
 
 
@@ -43,9 +43,4 @@ application {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
-}
-
-tasks.withType<JavaCompile> {
-    options.isFork = true
-    options.forkOptions.jvmArgs = listOf("-Xmx2048m")
 }
