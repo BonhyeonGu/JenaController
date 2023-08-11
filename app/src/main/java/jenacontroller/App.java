@@ -6,25 +6,30 @@ import java.io.File;
 import org.apache.jena.rdf.model.*;
 
 public class App {
-    public String start() {
-        ImportRDF_MakeModel rdfMaker = new ImportRDF_MakeModel("out.rdf", "xml");
-        rdfMaker.getLogInfo();
+    public void start() {
+        ModelController rdfMaker = new ModelController("out.rdf", "xml");
         Model model = rdfMaker.getModel();
-        rdfMaker.validationTest("sensorthings.owl");
-        return "Exit";
+        return;
+    }
+
+    public void test() {
+        ModelTester mt = new ModelTester();
+        mt.validationTest_OWL("sensorthings.owl");
+        //mt.validationTest_OWLandRDF("sensorthings.owl", "out.rdf");
+        return;
     }
 
     public static void main(String[] args) {
-        System.out.println(new File(".").getAbsolutePath());
         Runtime runtime = Runtime.getRuntime();
         long maxMemory = runtime.maxMemory(); // 최대 힙 메모리 크기
         long totalMemory = runtime.totalMemory(); // 현재 할당된 힙 메모리 크기
         long freeMemory = runtime.freeMemory(); // 사용 가능한 힙 메모리 크기
-
+        System.out.println(new File(".").getAbsolutePath());
         System.out.println("Max Memory: " + maxMemory / (1024 * 1024) + "MB");
         System.out.println("Total Memory: " + totalMemory / (1024 * 1024) + "MB");
         System.out.println("Free Memory: " + freeMemory / (1024 * 1024) + "MB");
         System.out.println("Start");
-        System.out.println(new App().start());
+        //new App().start();
+        new App().test();
     }
 }
