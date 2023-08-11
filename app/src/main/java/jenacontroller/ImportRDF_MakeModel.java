@@ -36,12 +36,12 @@ public class ImportRDF_MakeModel {
     public Model validationTest(String owl) {
         OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF);
         ontModel.read(owl);
-        InfModel infModel = ModelFactory.createInfModel(ontModel.getReasoner(), ontModel);
-        ValidityReport validityReport = infModel.validate();
-        if (ontModel.validate().isValid()) {
+    
+        ValidityReport validityReport = ontModel.validate();
+    
+        if (validityReport.isValid()) {
             System.out.println("Ontology is valid");
-        }
-        else {
+        } else {
             System.out.println("Ontology is NOT valid");
             Iterator<ValidityReport.Report> i = validityReport.getReports();
             while (i.hasNext()) {
