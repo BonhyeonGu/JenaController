@@ -23,7 +23,7 @@ class JenaValidate {
 
     fun validationTest_OWL(owl: String) {
         logger.debug("About to validate the following OWL models: $owl")
-        val model = ModelFactory.createDefaultModel()
+        val model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF)
         model.read(owl)
 
         // 유효성 검사
@@ -32,33 +32,33 @@ class JenaValidate {
 
         val validity = infModel.validate()
         if (validity.isValid) {
-            println("The OWL file is valid.")
+            logger.info("The OWL file is valid.")
         } else {
-            println("The OWL file is not valid. Errors:")
+            logger.info("The OWL file is not valid. Errors:")
             validity.reports.forEach { report ->
-                println(" - ${report.description}")
+                logger.error(" - ${report.description}")
             }
         }
     }
 
     fun validationTest_OWLandRDF(owl: String, rdf: String) {
-        val ontologyModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM)
+        val ontologyModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF)
         ontologyModel.read(owl)
 
-        val dataModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM)
+        val dataModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF)
         dataModel.addSubModel(ontologyModel)
         dataModel.read(rdf)
 
         val validityReport = dataModel.validate()
 
         if (validityReport.isValid) {
-            println("RDF data is valid against the given OWL ontology")
+            logger.info("RDF data is valid against the given OWL ontology")
         } else {
-            println("RDF data is NOT valid against the given OWL ontology")
+            logger.info("RDF data is NOT valid against the given OWL ontology")
             val i = validityReport.reports.iterator()
             while (i.hasNext()) {
                 val report = i.next()
-                println(" - ${report.description}")
+                logger.error(" - ${report.description}")
             }
         }
     }
