@@ -42,3 +42,4 @@ backup/
 _db
 *.owl
 *.rdf
+logs/
