@@ -33,7 +33,7 @@ class WebController {
         logger.debug("User Request /test")
         val jenaValidate = Validate()
         //jenaValidate.validationTest_OWL("https://paper.9bon.org/ontologies/sensorthings/1.1")
-        jenaValidate.validationTest_OWLandRDF("https://paper.9bon.org/ontologies/sensorthings/1.1", "out.rdf")
+        jenaValidate.validationTest_OWLandRDF("https://paper.9bon.org/ontologies/sensorthings/1.1", "./_RDF/out.rdf")
         model.addAttribute("message", "test")
         return "index"
     }
@@ -42,8 +42,25 @@ class WebController {
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
         val resourceURI = ontQ.deShort(resource)
-        val resourceInfo = ontQ.browseQuery(resourceURI)
-        model.addAttribute("resourceInfo", resourceInfo)
+        val originalResourceInfo = ontQ.browseQuery(resourceURI)
+        
+        val extendedResourceInfo = originalResourceInfo.map { entry -> 
+            entry.toList() + "" // 리스트로 변환 후 추가
+        }.map { // 다시 배열로 변환
+            it.toTypedArray()
+        }.toMutableList()
+        
+        val sortedResourceInfo = extendedResourceInfo.sortedBy { it[0] }
+    
+        for (i in sortedResourceInfo.indices) {
+            val currentEntry = sortedResourceInfo[i]
+            val nextEntries = sortedResourceInfo.subList(i, sortedResourceInfo.size)
+            val rowspan = nextEntries.takeWhile { it[0] == currentEntry[0] }.size
+            currentEntry[3] = rowspan.toString()
+        }
+    
+        model.addAttribute("resourceInfo", sortedResourceInfo)
         return "browse"
     }
+    
 }

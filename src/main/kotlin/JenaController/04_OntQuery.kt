@@ -31,26 +31,28 @@ class OntQuery(val ont:OntModel) {
         }
     }
 
-    fun browseQuery(resourceURI: String): Map<String, Array<String>> {
+    fun browseQuery(resourceURI: String): List<Array<String>> {
         logger.info("Browse => ${resourceURI}")
-        
+    
         val queryString = """
             SELECT ?property ?value WHERE {
-                <$resourceURI> ?property ?value.
+                { <$resourceURI> ?property ?value. }
+                UNION
+                { ?value ?property <$resourceURI>. }
             }
         """.trimIndent()
-
+    
         val query = QueryFactory.create(queryString)
         val qexec = QueryExecutionFactory.create(query, ont)
-
-        val resultsMap = mutableMapOf<String, Array<String>>()
+    
+        val resultsList = mutableListOf<Array<String>>()
         val results = qexec.execSelect()
-
-        var text = ""
-        var link = ""
+    
         while (results.hasNext()) {
             val soln = results.nextSolution()
             val property = soln.getResource("property").toString()
+            val text: String
+            val link: String
             if (soln.get("value").isResource) {
                 text = soln.getResource("value").toString()
                 link = enShort(soln.getResource("value").toString())
@@ -58,8 +60,9 @@ class OntQuery(val ont:OntModel) {
                 text = soln.getLiteral("value").toString()
                 link = "x"
             }
-            resultsMap[property] = arrayOf(text, link)
+            resultsList.add(arrayOf(property, text, link))
         }
-        return resultsMap
+        return resultsList
     }
+    
 }

@@ -19,16 +19,26 @@
     </tr>
     </thead>
     <tbody>
-    <tr th:each="entry : ${resourceInfo}">
-        <td class="cell-width" th:text="${entry.key}"></td>
-        <td class="cell-width">
-            <!-- 만약 1번째 인덱스의 값이 "x"가 아닌 경우 하이퍼링크로 표시합니다. -->
-            <a th:if="${entry.value[1] != 'x'}" th:href="@{'/browse/' + ${entry.value[1]}}" th:text="${entry.value[0]}"></a>
-            
-            <!-- 만약 1번째 인덱스의 값이 "x"인 경우 단순 텍스트로 표시합니다. -->
-            <span th:if="${entry.value[1] == 'x'}" th:text="${entry.value[0]}"></span>
-        </td>
-    </tr>
+    <th:block th:each="entry, stat : ${resourceInfo}" th:with="prev=${stat.index > 0 ? resourceInfo[stat.index - 1] : null}">
+        <!-- 만약 현재 항목의 첫 번째 원소와 이전 항목의 첫 번째 원소가 다르면 새로운 행을 시작합니다. -->
+        <tr th:if="${prev == null || entry[0] != prev[0]}">
+            <td class="cell-width" th:text="${entry[0]}" th:rowspan="${entry[3]}"></td>
+            <td class="cell-width">
+                <!-- 만약 2번째 인덱스의 값이 "x"가 아닌 경우 하이퍼링크로 표시합니다. -->
+                <a th:if="${entry[2] != 'x'}" th:href="@{'/browse/' + ${entry[2]}}" th:text="${entry[1]}"></a>
+                
+                <!-- 만약 2번째 인덱스의 값이 "x"인 경우 단순 텍스트로 표시합니다. -->
+                <span th:if="${entry[2] == 'x'}" th:text="${entry[1]}"></span>
+            </td>
+        </tr>
+        <!-- 만약 현재 항목의 첫 번째 원소와 이전 항목의 첫 번째 원소가 같으면 Value만 표시하는 새로운 행을 추가합니다. -->
+        <tr th:if="${prev != null && entry[0] == prev[0]}">
+            <td class="cell-width">
+                <a th:if="${entry[2] != 'x'}" th:href="@{'/browse/' + ${entry[2]}}" th:text="${entry[1]}"></a>
+                <span th:if="${entry[2] == 'x'}" th:text="${entry[1]}"></span>
+            </td>
+        </tr>
+    </th:block>
     </tbody>
 </table>
 
