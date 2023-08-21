@@ -19,6 +19,5 @@ fun main(args: Array<String>) {
 	println("Total Memory: ${totalMemory / (1024 * 1024)}MB")
 	println("Free Memory: ${freeMemory / (1024 * 1024)}MB")
 	println("Start")
-	
 	runApplication<Application>(*args)
 }

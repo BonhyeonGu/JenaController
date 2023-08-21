@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Browse Resource</title>
+    <style>
+        .cell-width {
+            width: 800px;
+        }
+    </style>
+</head>
+<body>
+<h1>Resource Details</h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Property</th>
+        <th>Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${resourceInfo}">
+        <td class="cell-width" th:text="${entry.key}"></td>
+        <td class="cell-width">
+            <!-- 만약 1번째 인덱스의 값이 "x"가 아닌 경우 하이퍼링크로 표시합니다. -->
+            <a th:if="${entry.value[1] != 'x'}" th:href="@{'/browse/' + ${entry.value[1]}}" th:text="${entry.value[0]}"></a>
+            
+            <!-- 만약 1번째 인덱스의 값이 "x"인 경우 단순 텍스트로 표시합니다. -->
+            <span th:if="${entry.value[1] == 'x'}" th:text="${entry.value[0]}"></span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

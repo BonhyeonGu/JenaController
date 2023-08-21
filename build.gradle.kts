@@ -45,3 +45,11 @@ tasks.withType(JavaExec::class.java) {
     jvmArgs("-Xms1024m", "-Xmx1024m")
 	//export JAVA_OPTS="-Xms64g -Xmx64g
 }
+
+tasks.register<JavaExec>("runDebug") {
+    group = "application"
+    mainClass.set("JenaController.Application")
+    classpath = sourceSets["main"].runtimeClasspath
+    args = listOf("--spring.profiles.active=dev")
+    jvmArgs = listOf("-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005")
+}
