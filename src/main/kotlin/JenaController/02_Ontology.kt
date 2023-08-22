@@ -25,7 +25,13 @@ class Ontology {
         val OWL_LOCALE = "https://paper.9bon.org/ontologies/sensorthings/1.1"
         //val RULE = OntModelSpec.OWL_DL_MEM//null
         //val RULE = OntModelSpec.OWL_DL_MEM_RULE_INF//Funtional Error
-        val RULE = OntModelSpec.OWL_DL_MEM_TRANS_INF//ok
+        //val RULE = OntModelSpec.OWL_DL_MEM_TRANS_INF//ok
+        //val RULE = OntModelSpec.OWL_LITE_MEM_RULES_INF//Funtional Error
+        val RULE = OntModelSpec.OWL_MEM_MICRO_RULE_INF//ok
+        //val RULE = OntModelSpec.OWL_MEM_RULE_INF//Funtional Error
+        //val RULE = OntModelSpec.OWL_MEM_TRANS_INF//OK
+
+
         val ontologyModel = ModelFactory.createOntologyModel(RULE)
         init {
             ontologyModel.read(OWL_LOCALE)
