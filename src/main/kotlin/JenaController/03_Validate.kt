@@ -13,7 +13,7 @@ import org.apache.jena.rdf.model.InfModel
 
 import org.apache.jena.vocabulary.RDFS
 
-class Validate {
+class Validate(val ont:OntModel) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(Validate::class.java)
     }
@@ -52,43 +52,16 @@ class Validate {
         }
     }
 
-    fun validationTest_OWLandRDF(owl: String, rdf: String) {
-        //val rule = OntModelSpec.OWL_DL_MEM//null
-        //val rule = OntModelSpec.OWL_DL_MEM_RULE_INF//Funtional Error
-        val rule = OntModelSpec.OWL_DL_MEM_TRANS_INF//ok
-
-        
-        val ontologyModel = ModelFactory.createOntologyModel(rule)
-        ontologyModel.read(owl)
-
-        val dataModel = ModelFactory.createOntologyModel(rule)
-        dataModel.addSubModel(ontologyModel)
-        dataModel.read(rdf)
-
-        val validityReport = dataModel.validate()
-
+    fun validationTest_OWLandRDF() {
+        val validityReport = ont.validate()
         if (validityReport.isValid) {
-            println("RDF data is valid against the given OWL ontology")
-            val iter = dataModel.listStatements()
-            var count = 0
-            while (iter.hasNext() && count < 20) {
-                val stmt = iter.nextStatement()
-                val subjectLabel = getLabelOrUri(dataModel, stmt.subject)
-                val predicateLabel = getLabelOrUri(dataModel, stmt.predicate)
-                val objectLabel = if (stmt.`object`.isResource) {
-                    getLabelOrUri(dataModel, stmt.`object`.asResource())
-                } else {
-                    stmt.`object`.toString()
-                }
-                println("$subjectLabel, $predicateLabel, $objectLabel")
-                count++
-            }
+            logger.info("RDF data is valid against the given OWL ontology")
         } else {
-            println("RDF data is NOT valid against the given OWL ontology")
+            logger.info("RDF data is NOT valid against the given OWL ontology")
             val i = validityReport.reports.iterator()
             while (i.hasNext()) {
                 val report = i.next()
-                println(" - ${report.description}")
+                logger.info(" - ${report.description}")
             }
         }
     }

@@ -36,9 +36,9 @@ class WebController {
     @GetMapping("/test")
     fun test(model: Model): String {
         logger.debug("User Request /test")
-        val jenaValidate = Validate()
+        val vali = Validate(ont)
         //jenaValidate.validationTest_OWL("https://paper.9bon.org/ontologies/sensorthings/1.1")
-        jenaValidate.validationTest_OWLandRDF("https://paper.9bon.org/ontologies/sensorthings/1.1", "./_RDF/out.rdf")
+        vali.validationTest_OWLandRDF()
         model.addAttribute("message", "test")
         return "index"
     }
