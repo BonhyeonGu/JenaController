@@ -56,7 +56,9 @@ class WebController {
             it.toTypedArray()
         }.toMutableList()
         
-        val sortedResourceInfo = extendedResourceInfo.sortedBy { it[0] }
+        val sortedResourceInfo = extendedResourceInfo.sortedWith(
+            compareBy({ if (it[2] == "x") 0 else 1 }, { it[0] }, { it[1] })
+        )
     
         for (i in sortedResourceInfo.indices) {
             val currentEntry = sortedResourceInfo[i]
