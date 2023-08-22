@@ -65,4 +65,32 @@ class OntQuery(val ont:OntModel) {
         return resultsList
     }
     
+    fun executeSPARQL(queryString: String): List<Array<String>> {
+        val query = QueryFactory.create(queryString)
+        val qexec = QueryExecutionFactory.create(query, ont)
+    
+        val resultsList = mutableListOf<Array<String>>()
+        val results = qexec.execSelect()
+        
+        // 쿼리의 결과에서 반환된 변수 이름 목록을 가져옵니다.
+        val resultVars = results.resultVars
+    
+        while (results.hasNext()) {
+            val soln = results.nextSolution()
+            
+            // 각 변수에 대해 값을 가져옵니다.
+            val row = resultVars.map { varName ->
+                val rdfNode = soln.get(varName)
+                when {
+                    rdfNode.isResource -> rdfNode.asResource().toString()
+                    rdfNode.isLiteral -> rdfNode.asLiteral().toString()
+                    else -> ""
+                }
+            }.toTypedArray()
+            
+            resultsList.add(row)
+        }
+    
+        return resultsList
+    }
 }

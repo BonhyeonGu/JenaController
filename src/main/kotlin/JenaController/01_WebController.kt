@@ -6,7 +6,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
+
+import org.apache.jena.query.QueryFactory
+import org.apache.jena.query.QueryExecutionFactory
 
 import JenaController.Ontology
 import JenaController.Validate
@@ -42,8 +47,9 @@ class WebController {
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
         val resourceURI = ontQ.deShort(resource)
+        model.addAttribute("resourceURI", resourceURI)
+
         val originalResourceInfo = ontQ.browseQuery(resourceURI)
-        
         val extendedResourceInfo = originalResourceInfo.map { entry -> 
             entry.toList() + "" // 리스트로 변환 후 추가
         }.map { // 다시 배열로 변환
@@ -62,5 +68,16 @@ class WebController {
         model.addAttribute("resourceInfo", sortedResourceInfo)
         return "browse"
     }
-    
+
+    @GetMapping("/queryForm")
+    fun showQueryForm(): String {
+        return "queryForm"
+    }
+
+    @PostMapping("/executeQuery")
+    fun executeQuery(@RequestParam sparqlQuery: String, model: Model): String {
+        val resultsList = ontQ.executeSPARQL(sparqlQuery)
+        model.addAttribute("results", resultsList)
+        return "queryResults"
+    }
 }
