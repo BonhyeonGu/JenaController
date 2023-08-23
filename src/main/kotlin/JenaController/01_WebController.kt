@@ -49,25 +49,22 @@ class WebController {
         val resourceURI = ontQ.deShort(resource)
         model.addAttribute("resourceURI", resourceURI)
 
-        val originalResourceInfo = ontQ.browseQuery(resourceURI)
-        val extendedResourceInfo = originalResourceInfo.map { entry -> 
-            entry.toList() + "" // 리스트로 변환 후 추가
-        }.map { // 다시 배열로 변환
-            it.toTypedArray()
-        }.toMutableList()
-        
-        val sortedResourceInfo = extendedResourceInfo.sortedWith(
-            compareBy({ if (it[2] == "x") 0 else 1 }, { it[0] }, { it[1] })
-        )
-    
-        for (i in sortedResourceInfo.indices) {
-            val currentEntry = sortedResourceInfo[i]
-            val nextEntries = sortedResourceInfo.subList(i, sortedResourceInfo.size)
-            val rowspan = nextEntries.takeWhile { it[0] == currentEntry[0] }.size
-            currentEntry[3] = rowspan.toString()
-        }
-    
-        model.addAttribute("resourceInfo", sortedResourceInfo)
+        var q = """
+            SELECT ?property ?value WHERE {
+                <$resourceURI> ?property ?value.
+            }
+        """.trimIndent()
+        var resourceInfo = ontQ.browseQuery(q)
+        model.addAttribute("resourceInfo", resourceInfo)
+
+        q = """
+            SELECT ?property ?value WHERE {
+                ?value ?property <$resourceURI>.
+            }
+        """.trimIndent()
+        resourceInfo = ontQ.browseQuery(q)
+        model.addAttribute("resourceInfoReverse", resourceInfo)
+
         return "browse"
     }
 

@@ -31,21 +31,14 @@ class OntQuery(val ont:OntModel) {
         }
     }
 
-    fun browseQuery(resourceURI: String): List<Array<String>> {
-        logger.info("Browse => ${resourceURI}")
-    
-        val queryString = """
-            SELECT ?property ?value WHERE {
-                { <$resourceURI> ?property ?value. }
-                UNION
-                { ?value ?property <$resourceURI>. }
-            }
-        """.trimIndent()
-    
-        val query = QueryFactory.create(queryString)
+    fun browseQuery(q: String): List<Array<String>> {
+        logger.info("Browse => ${q}")
+
+            
+        val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
     
-        val resultsList = mutableListOf<Array<String>>()
+        var resultsList = mutableListOf<Array<String>>()
         val results = qexec.execSelect()
     
         while (results.hasNext()) {
@@ -62,7 +55,25 @@ class OntQuery(val ont:OntModel) {
             }
             resultsList.add(arrayOf(property, text, link))
         }
-        return resultsList
+
+        val extendedResourceInfo = resultsList.map { entry -> 
+            entry.toList() + "" // 리스트로 변환 후 추가
+        }.map { // 다시 배열로 변환
+            it.toTypedArray()
+        }.toMutableList()
+        
+        val sortedResourceInfo = extendedResourceInfo.sortedWith(
+            compareBy({ if (it[2] == "x") 0 else 1 }, { it[0] }, { it[1] })
+        )
+    
+        for (i in sortedResourceInfo.indices) {
+            val currentEntry = sortedResourceInfo[i]
+            val nextEntries = sortedResourceInfo.subList(i, sortedResourceInfo.size)
+            val rowspan = nextEntries.takeWhile { it[0] == currentEntry[0] }.size
+            currentEntry[3] = rowspan.toString()
+        }
+
+        return sortedResourceInfo
     }
     
     fun executeSPARQL(queryString: String): List<Array<String>> {
