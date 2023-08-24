@@ -34,7 +34,6 @@ class OntQuery(val ont:OntModel) {
     fun browseQuery(q: String): List<Array<String>> {
         logger.info("Browse => ${q}")
 
-            
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
     
@@ -104,4 +103,26 @@ class OntQuery(val ont:OntModel) {
     
         return resultsList
     }
+
+    fun isProperty(resourceURI: String): Boolean {
+        val q = """
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX owl: <http://www.w3.org/2002/07/owl#>
+            
+            ASK WHERE {
+                {<$resourceURI> a rdf:Property.}
+                UNION
+                {<$resourceURI> a owl:ObjectProperty.}
+                UNION
+                {<$resourceURI> a owl:DatatypeProperty.}
+            }
+        """.trimIndent()
+    
+        val query = QueryFactory.create(q)
+        val qexec = QueryExecutionFactory.create(query, ont)
+    
+        return qexec.execAsk()
+    }
+    
+    
 }

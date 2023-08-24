@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Property Details</title>
+    <style>
+        .cell-Property {
+            width: 800px;
+        }
+        .cell-Value {
+            width: 1100px;
+        }
+        .font {
+            font-size: 20px;
+        }
+        a, a:visited {
+            color: blue;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${resourceURI}"></h1>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Attribute</th>
+        <th>Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="font" th:each="entry : ${propertyDetails}">
+        <td class="cell-Property" th:text="${entry[0]}"></td>
+        <td class="cell-Value">
+            <a th:if="${entry[2] != 'x'}" th:href="@{'/browse/' + ${entry[2]}}" th:text="${entry[1]}"></a>
+            <span th:if="${entry[2] == 'x'}" th:text="${entry[1]}"></span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

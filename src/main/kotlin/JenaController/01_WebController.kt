@@ -48,25 +48,53 @@ class WebController {
         logger.debug("User Request /browse/$resource")
         val resourceURI = ontQ.deShort(resource)
         model.addAttribute("resourceURI", resourceURI)
+        if (ontQ.isProperty(resourceURI)) {
+            val q = """ 
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                SELECT ?property ?value WHERE {
+                    {
+                        <http://paper.9bon.org/ontologies/sensorthings/1.1#hasname> rdfs:domain ?value.
+                        BIND (rdfs:domain AS ?property)
+                    }
+                    UNION
+                    {
+                        <http://paper.9bon.org/ontologies/sensorthings/1.1#hasname> rdfs:range ?value.
+                        BIND (rdfs:range AS ?property)
+                    }
+                    UNION
+                    {
+                        <http://paper.9bon.org/ontologies/sensorthings/1.1#hasname> owl:restriction ?value.
+                        BIND (owl:restriction AS ?property)
+                    }
+                }
+            """.trimIndent()
+            val propertyDetails = ontQ.browseQuery(q)
+            model.addAttribute("propertyDetails", propertyDetails)
+            return "browseProperty"
+        } else {
+            var q = """
+                SELECT ?property ?value WHERE {
+                    <$resourceURI> ?property ?value.
+                }
+            """.trimIndent()
 
-        var q = """
-            SELECT ?property ?value WHERE {
-                <$resourceURI> ?property ?value.
-            }
-        """.trimIndent()
-        var resourceInfo = ontQ.browseQuery(q)
-        model.addAttribute("resourceInfo", resourceInfo)
+            var resourceInfo = ontQ.browseQuery(q)
+            model.addAttribute("resourceInfo", resourceInfo)
 
-        q = """
-            SELECT ?property ?value WHERE {
-                ?value ?property <$resourceURI>.
-            }
-        """.trimIndent()
-        resourceInfo = ontQ.browseQuery(q)
-        model.addAttribute("resourceInfoReverse", resourceInfo)
+            q = """
+                SELECT ?property ?value WHERE {
+                    ?value ?property <$resourceURI>.
+                }
+            """.trimIndent()
+            
+            resourceInfo = ontQ.browseQuery(q)
+            model.addAttribute("resourceInfoReverse", resourceInfo)
 
-        return "browse"
+            return "browse"
+        }
     }
+
 
     @GetMapping("/queryForm")
     fun showQueryForm(): String {
