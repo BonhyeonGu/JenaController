@@ -50,25 +50,29 @@ class WebController {
         model.addAttribute("resourceURI", resourceURI)
         if (ontQ.isProperty(resourceURI)) {
             val q = """ 
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            PREFIX owl: <http://www.w3.org/2002/07/owl#>
-            SELECT ?property ?value WHERE {
-                {
-                    <$resourceURI> rdfs:domain ?value.
-                    BIND (rdfs:domain AS ?property)
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX owl: <http://www.w3.org/2002/07/owl#>
+                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        
+                SELECT ?property ?value WHERE {
+                    {
+                        <$resourceURI> rdfs:domain ?domainClass.
+                        ?domainClass owl:unionOf ?classList.
+                        ?classList rdf:rest*/rdf:first ?value.
+                        BIND (rdfs:domain AS ?property)
+                    }
+                    UNION
+                    {
+                        <$resourceURI> rdfs:range ?value.
+                        BIND (rdfs:range AS ?property)
+                    }
+                    UNION
+                    {
+                        <$resourceURI> owl:restriction ?value.
+                        BIND (owl:restriction AS ?property)
+                    }
                 }
-                UNION
-                {
-                    <$resourceURI> rdfs:range ?value.
-                    BIND (rdfs:range AS ?property)
-                }
-                UNION
-                {
-                    <$resourceURI> owl:restriction ?value.
-                    BIND (owl:restriction AS ?property)
-                }
-            }
-        """.trimIndent()
+            """.trimIndent()
             val propertyDetails = ontQ.browseQuery(q)
             model.addAttribute("propertyDetails", propertyDetails)
             return "browseProperty"
