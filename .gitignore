@@ -40,4 +40,5 @@ backup/
 _db
 *.owl
 *.rdf
+*.ttl
 logs/

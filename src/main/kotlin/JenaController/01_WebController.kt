@@ -29,7 +29,7 @@ class WebController {
     @GetMapping("/")
     fun index(model: Model): String {
         logger.debug("User Request /")
-        model.addAttribute("message", "zzz")
+        model.addAttribute("message", "Index")
         return "index"
     }
 
@@ -43,6 +43,7 @@ class WebController {
         return "index"
     }
 
+    //http://localhost:8080/browse/sts-EL_SMARTPOLE_MEDIAPOLE-W_1(scanner)+Thing_00
     @GetMapping("/browse/{resource}")
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
@@ -98,7 +99,6 @@ class WebController {
             return "browse"
         }
     }
-
 
     @GetMapping("/queryForm")
     fun showQueryForm(): String {
