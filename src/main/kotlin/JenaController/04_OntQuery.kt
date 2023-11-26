@@ -11,24 +11,41 @@ class OntQuery(val ont:OntModel) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
         val stsURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
+        val udURI = "https://github.com/VCityTeam/UD-Graph/"
     }
 
     fun enShort(inp: String): String {
+        var ret = ""
         if (inp.contains(stsURI)) {
             val inpPart = inp.split(stsURI)
-            return "sts-${inpPart[1]}"
-        } else {
-            return inp
+            ret = "sts-${inpPart[1]}"
         }
+        else if (inp.contains(udURI)) {
+            val inpPart = inp.split(udURI)
+            ret = "ud-${inpPart[1]}"
+            if (ret.contains("#")) {
+                val inpPart = ret.split("#")
+                ret = "${inpPart[0]}+${inpPart[1]}"
+            }
+        }
+        return ret
     }
 
     fun deShort(inp: String): String {
+        var ret = ""
         if (inp.contains("sts-")) {
             val inpPart = inp.split("sts-")
-            return "${stsURI}${inpPart[1]}"
-        } else {
-            return inp
+            ret = "${stsURI}${inpPart[1]}"
         }
+        else if (inp.contains("ud-")) {
+            val inpPart = inp.split("ud-")
+            ret = "${udURI}${inpPart[1]}"
+            if (ret.contains("+")) {
+                val inpPart = ret.split("+")
+                ret = "${inpPart[0]}#${inpPart[1]}"
+            }
+        }
+        return ret
     }
 
     fun browseQuery(q: String): List<Array<String>> {
