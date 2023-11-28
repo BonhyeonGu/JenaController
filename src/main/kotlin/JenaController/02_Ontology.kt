@@ -51,7 +51,8 @@ class Ontology {
         )
         */
 
-        val RULE = OntModelSpec.OWL_MEM_RULE_INF
+        //val RULE = OntModelSpec.OWL_MEM_RULE_INF
+        val RULE = OntModelSpec.OWL_MEM_TRANS_INF
 
         val ontologyModel = ModelFactory.createOntologyModel(RULE)
         init {

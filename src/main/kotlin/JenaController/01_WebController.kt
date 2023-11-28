@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
+//문자열을 랜더링없이 그대로
+import org.springframework.web.bind.annotation.ResponseBody
+//JSON변환을 위함
+import org.apache.jena.query.ResultSetFormatter
+import java.io.ByteArrayOutputStream
 
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
@@ -113,17 +118,45 @@ class WebController {
         return "queryResults"
     }
 
-    @GetMapping("/select1/{type}")
-    fun selectResource(@PathVariable type: String, model: Model): ResultSet {
-        println("select1")
-        println(type)
-        val resultsList = ontQ.selectType(type)
-        return resultsList
+    //http://localhost:8080/select/ud-E-TYPE_202dong+CityModel_0/brid:WallSurface
+    @GetMapping("/select/{bldgname}/{type}")
+    @ResponseBody
+    fun selectResource(@PathVariable bldgname: String, @PathVariable type: String): String {
+        val fullBldgName = ontQ.deShort(bldgname)
+        val resultsList = ontQ.selectType("$fullBldgName", type)
+        
+        // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
+        val outputStream = ByteArrayOutputStream()
+        ResultSetFormatter.outputAsJSON(outputStream, resultsList)
+        val jsonResults = outputStream.toString("UTF-8")
+    
+        return jsonResults
     }
 
-    @GetMapping("/select2/{id}")
-    fun selectInfo(@PathVariable id: String, model: Model): List<Array<String>> {
-        val resultsList = ontQ.executeSPARQL(id)
-        return resultsList
+    //http://localhost:8080/getGml/bldgInt_0a3gHV_mT8E8RMppZz0L0t_21530
+    @GetMapping("/getGml/{gmlID}")
+    @ResponseBody
+    fun getGml(@PathVariable gmlID: String, model: Model): String {
+        val resultsList = ontQ.idToGML(gmlID)
+        
+        // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
+        val outputStream = ByteArrayOutputStream()
+        ResultSetFormatter.outputAsJSON(outputStream, resultsList)
+        val jsonResults = outputStream.toString("UTF-8")
+    
+        return jsonResults
+    }
+
+    @GetMapping("/getMeta/{gmlID}")
+    @ResponseBody
+    fun getMeta(@PathVariable gmlID: String, model: Model): String {
+        val resultsList = ontQ.idToMeta(gmlID)
+        
+        // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
+        val outputStream = ByteArrayOutputStream()
+        ResultSetFormatter.outputAsJSON(outputStream, resultsList)
+        val jsonResults = outputStream.toString("UTF-8")
+    
+        return jsonResults
     }
 }

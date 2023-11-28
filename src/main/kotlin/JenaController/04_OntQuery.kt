@@ -141,7 +141,7 @@ class OntQuery(val ont:OntModel) {
         return qexec.execAsk()
     }
     
-    fun selectType(typeURL: String): ResultSet {
+    fun selectType(fromURI: String, typeURI: String): ResultSet {
         val q = """
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building#>
@@ -158,7 +158,8 @@ class OntQuery(val ont:OntModel) {
 
         SELECT ?label
         WHERE {
-        ?n rdf:type <$typeURL> .
+        <$fromURI> ?p ?n .
+        ?n rdf:type $typeURI .
         ?n skos:prefLabel ?label .
         }
 
@@ -166,6 +167,51 @@ class OntQuery(val ont:OntModel) {
         logger.info("selectType => ${q}")
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
+        
+        return qexec.execSelect()
+    }
+
+    fun idToGML(gmlID: String): ResultSet {
+        val q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+        PREFIX core: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/core#>
+        PREFIX gen: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/generics#>
+
+        SELECT ?asGML
+        WHERE {
+            ?a skos:prefLabel "$gmlID" .
+            ?a geo:hasGeometry ?geomNode .
+            ?geomNode geo:asGML ?asGML .
+        }
+
+        """.trimIndent()
+        logger.info("selectType => ${q}")
+        val query = QueryFactory.create(q)
+        val qexec = QueryExecutionFactory.create(query, ont)
+        
+        return qexec.execSelect()
+    }
+
+    fun idToMeta(gmlID: String): ResultSet {
+        val q = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+        PREFIX core: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/core#>
+        PREFIX gen: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/generics#>
+
+        SELECT ?altLabel ?value
+        WHERE {
+            ?a skos:prefLabel "$gmlID" .
+            ?a core:AbstractCityObject.abstractGenericAttribute ?relatedNode .
+            ?relatedNode skos:altLabel ?altLabel .
+            ?relatedNode gen:StringAttribute.value ?value .
+        }
+        """.trimIndent()
+        logger.info("selectType => ${q}")
+        val query = QueryFactory.create(q)
+        val qexec = QueryExecutionFactory.create(query, ont)
+        
         return qexec.execSelect()
     }
 }
