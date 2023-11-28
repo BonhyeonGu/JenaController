@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable
 
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
+import org.apache.jena.query.ResultSet
 
 import JenaController.Ontology
 import JenaController.Validate
@@ -110,5 +111,19 @@ class WebController {
         val resultsList = ontQ.executeSPARQL(sparqlQuery)
         model.addAttribute("results", resultsList)
         return "queryResults"
+    }
+
+    @GetMapping("/select1/{type}")
+    fun selectResource(@PathVariable type: String, model: Model): ResultSet {
+        println("select1")
+        println(type)
+        val resultsList = ontQ.selectType(type)
+        return resultsList
+    }
+
+    @GetMapping("/select2/{id}")
+    fun selectInfo(@PathVariable id: String, model: Model): List<Array<String>> {
+        val resultsList = ontQ.executeSPARQL(id)
+        return resultsList
     }
 }

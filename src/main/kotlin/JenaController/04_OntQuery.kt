@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
+import org.apache.jena.query.ResultSet
 
 class OntQuery(val ont:OntModel) {
     companion object {
@@ -49,7 +50,7 @@ class OntQuery(val ont:OntModel) {
     }
 
     fun browseQuery(q: String): List<Array<String>> {
-        logger.info("Browse => ${q}")
+        logger.debug("Browse => ${q}")
 
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
@@ -137,9 +138,34 @@ class OntQuery(val ont:OntModel) {
     
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
-    
         return qexec.execAsk()
     }
     
-    
+    fun selectType(typeURL: String): ResultSet {
+        val q = """
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building#>
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX brid: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/bridge#>
+        PREFIX app: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/appearance#>
+        PREFIX gmlowl: <http://www.opengis.net/ont/gml#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX gen: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/generics#>
+        PREFIX iso19136: <http://def.isotc211.org/iso19136/2007/Feature#>
+        PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+        PREFIX core: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/core#>
+        PREFIX iso19107_2207: <http://def.isotc211.org/iso19107/2003/CoordinateGeometry#>
+
+        SELECT ?label
+        WHERE {
+        ?n rdf:type <$typeURL> .
+        ?n skos:prefLabel ?label .
+        }
+
+        """.trimIndent()
+        logger.info("selectType => ${q}")
+        val query = QueryFactory.create(q)
+        val qexec = QueryExecutionFactory.create(query, ont)
+        return qexec.execSelect()
+    }
 }
