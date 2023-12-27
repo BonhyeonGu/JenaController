@@ -94,6 +94,7 @@ class OntQuery(val ont:OntModel) {
     }
     
     fun executeSPARQL(queryString: String): List<Array<String>> {
+        //val startTime = System.currentTimeMillis()
         val query = QueryFactory.create(queryString)
         val qexec = QueryExecutionFactory.create(query, ont)
     
@@ -118,7 +119,8 @@ class OntQuery(val ont:OntModel) {
             
             resultsList.add(row)
         }
-    
+        //val endTime = System.currentTimeMillis()
+        //println("s:${endTime - startTime} ")
         return resultsList
     }
 
