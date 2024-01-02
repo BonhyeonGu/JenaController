@@ -142,8 +142,22 @@ class OntQuery(val ont:OntModel) {
         val qexec = QueryExecutionFactory.create(query, ont)
         return qexec.execAsk()
     }
+
+    fun bldgType(): ResultSet {
+        val q = """
+        SELECT DISTINCT ?type
+        WHERE {
+        ?s a ?type .
+        FILTER(STRSTARTS(STR(?type), "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building"))
+        }
+        """.trimIndent()
+        logger.info("selectType => ${q}")
+        val query = QueryFactory.create(q)
+        val qexec = QueryExecutionFactory.create(query, ont)
+        return qexec.execSelect()
+    }
     
-    fun selectType(fromURI: String, typeURI: String): ResultSet {
+    fun bldgnameTypeToId(fromURI: String, typeURI: String): ResultSet {
         val q = """
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building#>
@@ -169,7 +183,6 @@ class OntQuery(val ont:OntModel) {
         logger.info("selectType => ${q}")
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
-        
         return qexec.execSelect()
     }
 

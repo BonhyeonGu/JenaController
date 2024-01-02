@@ -23,6 +23,7 @@ import JenaController.Ontology
 import JenaController.Validate
 import JenaController.OntQuery
 
+import org.json.JSONObject
 
 @Controller
 class WebController {
@@ -30,6 +31,27 @@ class WebController {
         private val logger: Logger = LoggerFactory.getLogger(WebController::class.java)
         val ont = Ontology.ontologyModel
         val ontQ = OntQuery(ont)
+
+    }
+
+    fun modifyJsonResults(jsonResults: String, replacementMap: MutableMap<String, String>): String {
+        val jsonObject = JSONObject(jsonResults)
+        val resultsArray = jsonObject.getJSONObject("results").getJSONArray("bindings")
+    
+        for (i in 0 until resultsArray.length()) {
+            val typeObj = resultsArray.getJSONObject(i).getJSONObject("type")
+            val originalValue = typeObj.getString("value")
+    
+            // 문자열 교체
+            val modifiedValue = replacementMap.entries.fold(originalValue) { acc, entry ->
+                acc.replace(entry.key, entry.value)
+            }
+    
+            // 새로운 "valueShort" 키 추가
+            typeObj.put("valueShort", modifiedValue)
+        }
+    
+        return jsonObject.toString()
     }
 
     @GetMapping("/")
@@ -120,11 +142,11 @@ class WebController {
 
 //=====================================================================================================
 
-    @GetMapping("/selectJSON/{bldgname}/{type}")
+    @GetMapping("/select/id/{bldgname}/{type}")
     @ResponseBody
-    fun selectJSON(@PathVariable bldgname: String, @PathVariable type: String): String {
+    fun getId(@PathVariable bldgname: String, @PathVariable type: String): String {
         val fullBldgName = ontQ.deShort(bldgname)
-        val resultsList = ontQ.selectType("$fullBldgName", type)
+        val resultsList = ontQ.bldgnameTypeToId("$fullBldgName", type)
         
         // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
         val outputStream = ByteArrayOutputStream()
@@ -134,6 +156,7 @@ class WebController {
         return jsonResults
     }
 
+    /*
     @GetMapping("/getGmlJSON/{gmlID}")
     @ResponseBody
     fun getGmlJSON(@PathVariable gmlID: String, model: Model): String {
@@ -146,10 +169,11 @@ class WebController {
     
         return jsonResults
     }
+    */
 
-    @GetMapping("/getMetaJSON/{gmlID}")
+    @GetMapping("/select/meta/{gmlID}")
     @ResponseBody
-    fun getMetaJSON(@PathVariable gmlID: String, model: Model): String {
+    fun getMeta(@PathVariable gmlID: String, model: Model): String {
         val resultsList = ontQ.idToMeta(gmlID)
         
         // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
@@ -162,7 +186,7 @@ class WebController {
 
 //=====================================================================================================
 
-    @GetMapping("/getGmlXML/{gmlID}", produces = ["application/xml"])
+    @GetMapping("/select/gml/{gmlID}", produces = ["application/xml"])
     @ResponseBody
     fun getGmlXML(@PathVariable gmlID: String, model: Model): String {
         val resultsList = ontQ.idToGML(gmlID)
@@ -180,5 +204,28 @@ class WebController {
 
 //=====================================================================================================
 
+    @GetMapping("/select/bldgtype")
+    @ResponseBody
+    fun getType(): String {
+        val resultsList = ontQ.bldgType()
+
+        // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
+        val outputStream = ByteArrayOutputStream()
+        ResultSetFormatter.outputAsJSON(outputStream, resultsList)
+        val jsonResults = outputStream.toString("UTF-8")
+    
+        // 교체 매핑 정의
+        val replacementMap = mutableMapOf(
+            "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building#" to "bldg:"
+        )
+    
+        // JSON 결과 수정
+        val modifiedJsonResults = modifyJsonResults(jsonResults, replacementMap)
+    
+        return modifiedJsonResults
+    }
+
+
+//=====================================================================================================
 
 }
