@@ -7,6 +7,8 @@ import java.io.File
 
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.ontology.OntDocumentManager
+
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.tdb.TDBFactory
 import org.apache.jena.reasoner.ValidityReport
@@ -16,6 +18,7 @@ import org.apache.jena.reasoner.ReasonerRegistry
 import org.apache.jena.rdf.model.InfModel
 
 import org.apache.jena.vocabulary.RDFS
+import org.apache.jena.riot.RiotException
 
 class Ontology {
     companion object {
@@ -23,7 +26,6 @@ class Ontology {
         val TDB_LOCALE = "./_TDB"
         val RDF_LOCALE = "./_RDF"
         val OWL_LOCALE = "./_OWL"
-        /*
         val OWL_LOCALES: Array<String> = arrayOf(
             "https://paper.9bon.org/ontologies/sensorthings/1.1",
 
@@ -49,31 +51,57 @@ class Ontology {
             "https://def.isotc211.org/ontologies/iso19136/2007/Feature.rdf",
             "https://def.isotc211.org/ontologies/iso19107/2003/CoordinateGeometry.rdf"
         )
-        */
 
         //val RULE = OntModelSpec.OWL_MEM_RULE_INF
         val RULE = OntModelSpec.OWL_MEM_TRANS_INF
-
-        val ontologyModel = ModelFactory.createOntologyModel(RULE)
-        init {
-            /*
-            OWL_LOCALES.forEach { url ->
-                var type = ""
-                try {
-                    ontologyModel.read(url, "text/turtle");
-                    type = "Tuttle"
-                } catch (e: Exception) {
-                    ontologyModel.read(url, "application/rdf+xml");
-                    type = "RDF/XML"
-                }
-                logger.info("Load -- type=" + type + "  url=" + url)
+        private val readStatusMap: MutableMap<String, Boolean> = mutableMapOf()
+        //메니저 생성
+        private val ontDocMgr = OntDocumentManager().apply {
+            //setProcessImports(false)
+            setReadFailureHandler { uri, model, e ->
+                logger.error("Read Fail, URI => $uri, Handle => OntManager, ${e.message}")
+                readStatusMap[uri] = false
             }
-            */
+        }
+        //온톨로지 모델의 메니저 정의
+        private val ontModelSpec = OntModelSpec(RULE).apply {
+            documentManager = ontDocMgr
+        }
+        val ontologyModel: OntModel = ModelFactory.createOntologyModel(ontModelSpec)
+        
+        init {
+            //작성한 OWL들을 불러옴
+            OWL_LOCALES.forEach { url ->
+                logger.info("Try read URL => " + url)
+                readStatusMap[url] = true
+                try {
+                    ontologyModel.read(url, "text/turtle")
+                    logger.info("Read Complite, Type => Turtle")
+                } catch (e: Exception) {
+                    try {
+                        ontologyModel.read(url, "application/rdf+xml")
+                        logger.info("Read Complite, Type => RDF/XML")
+                    } catch (e: Exception) {
+                        logger.error("Read Fail, URI => $url, Handle => OntManager, ${e.message}")
+                        readStatusMap[url] = false
+                    }
+                }
+            }
 
             //!!!!OWL과 RDF를 읽는 방법이 다른지 추가적인 조사가 필요하다.!!!!
             readRDF(OWL_LOCALE)
             readRDF(RDF_LOCALE)
-            logger.info("Clear OWL, RDF take")
+            logger.info("")
+            logger.info("")
+            logger.info("Successfully read the following URLs without errors:")
+            //에러없는 OWL, RDF 리스트
+            readStatusMap.forEach { (url, success) ->
+                if (success) {
+                    logger.info(url)
+                }
+            }
+            logger.info("")
+            logger.info("")
         }
         
         private fun readRDF(locale: String) {
@@ -81,8 +109,12 @@ class Ontology {
             if (directory.exists() && directory.isDirectory) {
                 val files = directory.listFiles()
                 files?.forEach { file ->
-                    ontologyModel.read(file.absolutePath)
                     logger.info("Read RDF => ${RDF_LOCALE}/${file.name}")
+                    try {
+                        ontologyModel.read(file.absolutePath)
+                    } catch (e: RiotException) {
+                        logger.error("RiotException => ${RDF_LOCALE}/${file.name}")
+                    }
                 }
             } else {
                 logger.error("The provided path is not a valid directory.")
