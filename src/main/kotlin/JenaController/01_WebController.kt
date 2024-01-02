@@ -118,10 +118,11 @@ class WebController {
         return "queryResults"
     }
 
-    //http://localhost:8080/select/ud-E-TYPE_202dong+CityModel_0/brid:WallSurface
-    @GetMapping("/select/{bldgname}/{type}")
+//=====================================================================================================
+
+    @GetMapping("/selectJSON/{bldgname}/{type}")
     @ResponseBody
-    fun selectResource(@PathVariable bldgname: String, @PathVariable type: String): String {
+    fun selectJSON(@PathVariable bldgname: String, @PathVariable type: String): String {
         val fullBldgName = ontQ.deShort(bldgname)
         val resultsList = ontQ.selectType("$fullBldgName", type)
         
@@ -133,10 +134,9 @@ class WebController {
         return jsonResults
     }
 
-    //http://localhost:8080/getGml/bldgInt_0a3gHV_mT8E8RMppZz0L0t_21530
-    @GetMapping("/getGml/{gmlID}")
+    @GetMapping("/getGmlJSON/{gmlID}")
     @ResponseBody
-    fun getGml(@PathVariable gmlID: String, model: Model): String {
+    fun getGmlJSON(@PathVariable gmlID: String, model: Model): String {
         val resultsList = ontQ.idToGML(gmlID)
         
         // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
@@ -147,9 +147,9 @@ class WebController {
         return jsonResults
     }
 
-    @GetMapping("/getMeta/{gmlID}")
+    @GetMapping("/getMetaJSON/{gmlID}")
     @ResponseBody
-    fun getMeta(@PathVariable gmlID: String, model: Model): String {
+    fun getMetaJSON(@PathVariable gmlID: String, model: Model): String {
         val resultsList = ontQ.idToMeta(gmlID)
         
         // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
@@ -159,4 +159,26 @@ class WebController {
     
         return jsonResults
     }
+
+//=====================================================================================================
+
+    @GetMapping("/getGmlXML/{gmlID}", produces = ["application/xml"])
+    @ResponseBody
+    fun getGmlXML(@PathVariable gmlID: String, model: Model): String {
+        val resultsList = ontQ.idToGML(gmlID)
+        
+        // 결과를 XML 형식으로 변환
+        val xmlStringBuilder = StringBuilder()
+        while (resultsList.hasNext()) {
+            val querySolution = resultsList.next()
+            val gmlValue = querySolution.get("asGML").asLiteral().string
+            xmlStringBuilder.append(gmlValue)
+        }
+    
+        return xmlStringBuilder.toString()
+    }
+
+//=====================================================================================================
+
+
 }
