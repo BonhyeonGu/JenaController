@@ -61,6 +61,7 @@ class WebController {
         return "index"
     }
 
+    //Validation
     @GetMapping("/test")
     fun test(model: Model): String {
         logger.debug("User Request /test")
@@ -71,7 +72,7 @@ class WebController {
         return "index"
     }
 
-    //http://localhost:8080/browse/sts-EL_SMARTPOLE_MEDIAPOLE-W_1(scanner)+Thing_00
+    //http://localhost:8080/browse/sta-EL_SMARTPOLE_MEDIAPOLE-W_1(scanner)+Thing_00
     @GetMapping("/browse/{resource}")
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
@@ -185,7 +186,7 @@ class WebController {
     }
 
 //=====================================================================================================
-
+    //Get Part of GML
     @GetMapping("/select/gml/{gmlID}", produces = ["application/xml"])
     @ResponseBody
     fun getGmlXML(@PathVariable gmlID: String, model: Model): String {
@@ -201,6 +202,30 @@ class WebController {
     
         return xmlStringBuilder.toString()
     }
+
+    //Get BB, Doesn't think about tree structure, lower x, y, z, upper x, y, z
+    @GetMapping("/select/bb/{gmlID}", produces = ["text/plain"])
+    @ResponseBody
+    fun getBB(@PathVariable gmlID: String): String {
+        val resultsList = ontQ.idToBB(gmlID) // 함수 이름을 idToBB로 변경했습니다.
+    
+        // 결과를 단일 문자열로 변환
+        val resultStringBuilder = StringBuilder()
+        while (resultsList.hasNext()) {
+            val querySolution = resultsList.next()
+            val lowerCorner = querySolution.get("lowerCorner").asLiteral().string
+            val upperCorner = querySolution.get("upperCorner").asLiteral().string
+    
+            // lowerCorner와 upperCorner 값을 공백으로 구분하여 추가
+            if (resultStringBuilder.isNotEmpty()) {
+                resultStringBuilder.append(" ")
+            }
+            resultStringBuilder.append("$lowerCorner $upperCorner")
+        }
+    
+        return resultStringBuilder.toString()
+    }
+    
 
 //=====================================================================================================
 
@@ -227,5 +252,22 @@ class WebController {
 
 
 //=====================================================================================================
+
+    @GetMapping("/leveltest")
+    fun levelupdate(model: Model): String {
+        logger.debug("User Request /levelupdate")
+        ontQ.levelUpdate()
+        model.addAttribute("message", "levelupdate")
+        return "index"
+    }
+
+    @GetMapping("/visitTest")
+    fun visitTest(model: Model): String {
+        logger.debug("User Request /visitTest")
+        ontQ.visitTest()
+        ontQ.levelUpdate()
+        model.addAttribute("message", "visitTest")
+        return "index"
+    }
 
 }

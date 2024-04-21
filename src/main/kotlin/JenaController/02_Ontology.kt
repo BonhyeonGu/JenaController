@@ -28,6 +28,10 @@ class Ontology {
         val OWL_LOCALE = "./_OWL"
         val OWL_LOCALES: Array<String> = arrayOf(
             "https://paper.9bon.org/ontologies/sensorthings/1.1",
+            "https://paper.9bon.org/ontologies/smartcity/0.2"
+        )
+        val OWL_LOCALES2: Array<String> = arrayOf(
+            "https://paper.9bon.org/ontologies/sensorthings/1.1",
 
             "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/appearance",
             "https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/bridge",
@@ -52,8 +56,8 @@ class Ontology {
             "https://def.isotc211.org/ontologies/iso19107/2003/CoordinateGeometry.rdf"
         )
 
-        //val RULE = OntModelSpec.OWL_MEM_RULE_INF
-        val RULE = OntModelSpec.OWL_MEM_TRANS_INF
+        val RULE = OntModelSpec.OWL_MEM_RULE_INF
+        //val RULE = OntModelSpec.OWL_MEM_TRANS_INF
         private val readStatusMap: MutableMap<String, Boolean> = mutableMapOf()
         //메니저 생성
         private val ontDocMgr = OntDocumentManager().apply {
