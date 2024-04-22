@@ -324,40 +324,41 @@ class OntQuery(val ont:OntModel) {
 
     fun visitTest() {
         val baseUri = "http://paper.9bon.org/ontologies/smartcity/0.2#Area_000"
-        for (i in 0..4) {
-            val areaUri = "$baseUri$i"
-            val queryStringUpdate = """
+        val peopleCounts = (0..4).map { generateRandomPeople() }
+        val queryStringUpdate = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
+    
             DELETE {
                 ?result sta:hasvalue ?oldValue.
             }
             INSERT {
                 ?result sta:hasvalue ?newValue.
             } WHERE {
-                <$areaUri> tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
+                VALUES (?area ?newValue) {
+                    ${peopleCounts.mapIndexed { index, count -> "(<$baseUri$index> \"$count\")" }.joinToString("\n")}
+                }
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
                 ?obs sta:hasresult ?result.
                 ?result sta:hasObservedProperty ?obsProp;
                          sta:hasvalue ?oldValue.
                 ?obsProp sta:hasname "Visit".
-                BIND("${generateRandomPeople()}" AS ?newValue)
             }
-            """.trimIndent()
+        """.trimIndent()
     
-            val update = UpdateFactory.create(queryStringUpdate)
-            val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-            val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-            
-            try {
-                updateProcessor.execute()
-                println("Random people count updated successfully for $areaUri")
-            } catch (e: Exception) {
-                println("Failed to update random people count for $areaUri: $e")
-            }
+        val update = UpdateFactory.create(queryStringUpdate)
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        try {
+            updateProcessor.execute()
+            logger.debug("Random people count updated successfully")
+        } catch (e: Exception) {
+            logger.debug("Failed to update random people count: $e")
         }
-    }    
+    }
+    
     
     
     fun generateRandomPeople(): String {

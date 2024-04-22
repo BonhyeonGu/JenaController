@@ -256,18 +256,23 @@ class WebController {
     @GetMapping("/leveltest")
     fun levelupdate(model: Model): String {
         logger.debug("User Request /levelupdate")
+        val startTime = System.currentTimeMillis() 
         ontQ.levelUpdate()
-        model.addAttribute("message", "levelupdate")
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
     @GetMapping("/visitTest")
     fun visitTest(model: Model): String {
         logger.debug("User Request /visitTest")
+        val startTime = System.currentTimeMillis()
         ontQ.visitTest()
-        ontQ.levelUpdate()
-        model.addAttribute("message", "visitTest")
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
-    }
+    }   
 
 }
