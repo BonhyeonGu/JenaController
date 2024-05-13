@@ -56,8 +56,8 @@ class Ontology {
             "https://def.isotc211.org/ontologies/iso19107/2003/CoordinateGeometry.rdf"
         )
 
-        val RULE = OntModelSpec.OWL_MEM_RULE_INF
-        //val RULE = OntModelSpec.OWL_MEM_TRANS_INF
+        //val RULE = OntModelSpec.OWL_MEM_RULE_INF
+        val RULE = OntModelSpec.OWL_MEM_TRANS_INF
         private val readStatusMap: MutableMap<String, Boolean> = mutableMapOf()
         //메니저 생성
         private val ontDocMgr = OntDocumentManager().apply {

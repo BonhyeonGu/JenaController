@@ -314,17 +314,107 @@ class OntQuery(val ont:OntModel) {
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
     
-        try {
-            updateProcessor.execute()
-            println("Update executed successfully")
-        } catch (e: Exception) {
-            println("Failed to execute update: $e")
-        }
+        //try {
+        //    updateProcessor.execute()
+        //    println("Update executed successfully")
+        //} catch (e: Exception) {
+        //    println("Failed to execute update: $e")
+        //}
+        updateProcessor.execute()
     }
+
+    fun levelUpdate2() {
+        val queryString = """
+        PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+        PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+        DELETE WHERE {
+            ?area tsc:hasLevel ?oldLevel.
+        };
+
+        INSERT {
+            ?area tsc:hasLevel ?level.
+        } WHERE {
+            ?city tsc:hasArea ?area.
+            ?area tsc:hasSquareMeter ?sqm.
+            ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                sta:pointToresult ?resultResource;
+                sta:pointToMultiObservedProperty [
+                    sta:hasname "Visit"
+                ]
+            ].
+            ?resultResource sta:hasvalue ?resultValue.
+            BIND(xsd:decimal(?resultValue) AS ?people)
+            BIND(?people / ?sqm AS ?peoplePerSqM)
+
+            OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
+            OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
+            OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
+            OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
+            OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
+            OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
+        }
+        """.trimIndent()
+    
+        val update = UpdateFactory.create(queryString)
+        val dataset = DatasetFactory.create(ont)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        updateProcessor.execute()
+    }
+
+    fun levelUpdate3() {
+        val queryString = """
+        PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+        PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        
+        # First, delete existing levels
+        DELETE WHERE {
+            ?area tsc:hasLevel ?oldLevel.
+        };
+        
+        # Then, insert new levels based on updated calculations
+        INSERT {
+            ?area tsc:hasLevel ?level.
+        }
+        WHERE {
+            # Find the unique node for the "Visit" ObservedProperty
+            ?visitProp a sta:ObservedProperty ;
+                       sta:hasname "Visit" .
+        
+            # Traverse to the associated values
+            ?visitProp sta:isObservedPropertyByresult ?resultResource .
+            ?resultResource sta:hasvalue ?resultValue .
+            
+            # Find associated areas
+            ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint/sta:pointToresult ?resultResource ;
+                  tsc:hasSquareMeter ?sqm .
+            
+            BIND(xsd:decimal(?resultValue) AS ?people)
+            BIND(?people / ?sqm AS ?peoplePerSqM)
+        
+            # Define levels based on peoplePerSqM
+            OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
+            OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
+            OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
+            OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
+            OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
+            OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
+        }        
+        """.trimIndent()
+    
+        val update = UpdateFactory.create(queryString)
+        val dataset = DatasetFactory.create(ont)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+        updateProcessor.execute()
+    }
+
 
     fun visitTest() {
         val baseUri = "http://paper.9bon.org/ontologies/smartcity/0.2#Area_000"
-        val peopleCounts = (0..4).map { generateRandomPeople() }
+        val peopleCounts = (0..99999).map { generateRandomPeople() }
         val queryStringUpdate = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>

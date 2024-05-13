@@ -43,7 +43,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType(JavaExec::class.java) {
-    jvmArgs("-Xms8g", "-Xmx8g")
+    jvmArgs("-Xms32g", "-Xmx32g")
 	//export JAVA_OPTS="-Xms64g -Xmx64g
 }
 

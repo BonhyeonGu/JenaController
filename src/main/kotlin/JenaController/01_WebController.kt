@@ -25,6 +25,12 @@ import JenaController.OntQuery
 
 import org.json.JSONObject
 
+
+import java.io.FileOutputStream
+
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 @Controller
 class WebController {
     companion object {
@@ -76,9 +82,15 @@ class WebController {
     @GetMapping("/browse/{resource}")
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
+
+        var startTime: Long = 0
+        var endTime: Long = 0
+        var executionTime: Long = 0
+
         val resourceURI = ontQ.deShort(resource)
         model.addAttribute("resourceURI", resourceURI)
         if (ontQ.isProperty(resourceURI)) {
+            startTime = System.currentTimeMillis()
             val q = """ 
                 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                 PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -104,18 +116,25 @@ class WebController {
                 }
             """.trimIndent()
             val propertyDetails = ontQ.browseQuery(q)
+            endTime = System.currentTimeMillis()
+            executionTime = endTime - startTime
+            model.addAttribute("executionTime", executionTime)
             model.addAttribute("propertyDetails", propertyDetails)
             return "browseProperty"
         } else {
+            startTime = System.currentTimeMillis()
             var q = """
                 SELECT ?property ?value WHERE {
                     <$resourceURI> ?property ?value.
-                }
+                }   
             """.trimIndent()
-
             var resourceInfo = ontQ.browseQuery(q)
+            endTime = System.currentTimeMillis()
+            val executionTime0 = endTime - startTime
+            model.addAttribute("executionTime0", executionTime0)
             model.addAttribute("resourceInfo", resourceInfo)
 
+            startTime = System.currentTimeMillis()
             q = """
                 SELECT ?property ?value WHERE {
                     ?value ?property <$resourceURI>.
@@ -123,6 +142,9 @@ class WebController {
             """.trimIndent()
             
             resourceInfo = ontQ.browseQuery(q)
+            endTime = System.currentTimeMillis()
+            val executionTime1 = endTime - startTime
+            model.addAttribute("executionTime1", executionTime1)
             model.addAttribute("resourceInfoReverse", resourceInfo)
 
             return "browse"
@@ -141,6 +163,21 @@ class WebController {
         return "queryResults"
     }
 
+
+    @GetMapping("/save")
+    fun save(model: Model): String {
+        val startTime = System.currentTimeMillis()
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss")
+        val filename = "./" + currentDateTime.format(formatter) + ".rdf"
+        FileOutputStream(filename).use { outStream ->
+            ont.write(outStream, "RDF/XML")
+        }
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
 //=====================================================================================================
 
     @GetMapping("/select/id/{bldgname}/{type}")
@@ -258,6 +295,28 @@ class WebController {
         logger.debug("User Request /levelupdate")
         val startTime = System.currentTimeMillis() 
         ontQ.levelUpdate()
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
+
+    @GetMapping("/leveltest2")
+    fun levelupdate2(model: Model): String {
+        logger.debug("User Request /levelupdate2")
+        val startTime = System.currentTimeMillis() 
+        ontQ.levelUpdate2()
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
+
+    @GetMapping("/leveltest3")
+    fun levelupdate3(model: Model): String {
+        logger.debug("User Request /levelupdate3")
+        val startTime = System.currentTimeMillis() 
+        ontQ.levelUpdate3()
         val endTime = System.currentTimeMillis()
         val executionTime = endTime - startTime
         model.addAttribute("message", "Execution time: $executionTime ms")
