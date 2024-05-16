@@ -334,4 +334,14 @@ class WebController {
         return "index"
     }   
 
+    @GetMapping("/visitTest2")
+    fun visitTest2(model: Model): String {
+        logger.debug("User Request /visitTest2")
+        val startTime = System.currentTimeMillis()
+        ontQ.visitTest2()
+        val endTime = System.currentTimeMillis()
+        val executionTime = endTime - startTime
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }   
 }

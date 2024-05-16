@@ -45,6 +45,7 @@ tasks.withType<Test> {
 tasks.withType(JavaExec::class.java) {
     jvmArgs("-Xms32g", "-Xmx32g")
 	//export JAVA_OPTS="-Xms64g -Xmx64g
+	//$env:GRADLE_OPTS="-Xmx800g"
 }
 
 tasks.register<JavaExec>("debug") {
