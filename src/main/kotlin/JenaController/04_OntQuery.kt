@@ -22,7 +22,7 @@ class OntQuery(val ont:OntModel) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
         val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
-        val udURI = "https://github.com/VCityTeam/UD-Graph/"
+        val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
     }
 
@@ -277,7 +277,7 @@ class OntQuery(val ont:OntModel) {
     }
 
     //paper
-    fun levelUpdate() {
+    fun levelUpdate0(): Long {
         val queryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -330,51 +330,72 @@ class OntQuery(val ont:OntModel) {
         //} catch (e: Exception) {
         //    println("Failed to execute update: $e")
         //}
+        val startTime = System.currentTimeMillis()
         updateProcessor.execute()
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
     }
 
-    fun levelUpdate2() {
+    fun levelUpdate1(): Long {
         val queryString = """
-        PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-        PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-        DELETE WHERE {
-            ?area tsc:hasLevel ?oldLevel.
-        };
-
-        INSERT {
-            ?area tsc:hasLevel ?level.
-        } WHERE {
-            ?city tsc:hasArea ?area.
-            ?area tsc:hasSquareMeter ?sqm.
-            ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                sta:pointToresult ?resultResource;
-                sta:pointToMultiObservedProperty [
-                    sta:hasname "Visit"
-                ]
-            ].
-            ?resultResource sta:hasvalue ?resultValue.
-            BIND(xsd:decimal(?resultValue) AS ?people)
-            BIND(?people / ?sqm AS ?peoplePerSqM)
-
-            OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-            OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-            OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-            OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-            OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-            OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-        }
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE WHERE {
+                ?area tsc:hasLevel ?oldLevel.
+            };
+            
+            INSERT {
+                ?area tsc:hasLevel ?level.
+            } WHERE {
+                ?city tsc:hasArea ?area.
+                ?area tsc:hasSquareMeter ?sqm.
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToresult ?resultResource;
+                    sta:pointToMultiObservedProperty [
+                        sta:hasname "Visit"
+                    ]
+                ].
+                ?resultResource sta:hasvalue ?resultValue;
+                                sta:isresultByObservation [
+                                    sta:hasresultTime ?resultTime
+                                ].
+                {
+                    SELECT ?area (MAX(?resultTime) AS ?latestTime)
+                    WHERE {
+                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                            sta:pointToresult/sta:isresultByObservation [
+                                sta:hasresultTime ?resultTime
+                            ]
+                        ].
+                    }
+                    GROUP BY ?area
+                }
+                FILTER(?resultTime = ?latestTime)
+                BIND(xsd:decimal(?resultValue) AS ?people)
+                BIND(?people / ?sqm AS ?peoplePerSqM)
+            
+                OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
+                OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
+                OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
+                OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
+                OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
+                OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
+            }
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
     
+        val startTime = System.currentTimeMillis()
         updateProcessor.execute()
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
     }
 
-    fun levelUpdate3() {
+    fun levelUpdate2OldDoesntUse() {
         val queryString = """
         PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
         PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -421,8 +442,7 @@ class OntQuery(val ont:OntModel) {
         updateProcessor.execute()
     }
 
-
-    fun visitTest() {
+    fun old_visitTest() {
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
     
         // Step 1: Fetch all Areas
@@ -542,7 +562,7 @@ class OntQuery(val ont:OntModel) {
     }
     
 
-    fun visitTest2() {
+    fun debugVisitUpdate(): Long {
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
     
         // Step 1: Fetch all Observations
@@ -581,11 +601,74 @@ class OntQuery(val ont:OntModel) {
         val update = UpdateFactory.create(queryStringUpdate)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
     
+        val startTime = System.currentTimeMillis()
         try {
             updateProcessor.execute()
             logger.debug("Random people count updated successfully")
         } catch (e: Exception) {
             logger.debug("Failed to update random people count: $e")
         }
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
+    }
+
+
+    fun generateRandomTemp(): String {
+        val ranges = listOf(
+            -10.0..25.0
+        )
+        val selectedRange = ranges.random()
+        val randomValue = Random.nextDouble(selectedRange.start, selectedRange.endInclusive)
+        return String.format("%.2f", randomValue)
+    }
+
+    fun debugTempUpdate(): Long {
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+    
+        // Step 1: Fetch all Observations
+        val observations = fetchObservations(dataset)
+    
+        // Step 2: Generate random people counts for each Observation
+        val peopleCounts = observations.map { generateRandomTemp() }
+    
+        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+            "(<${obs.second}> \"$count\"^^xsd:double)"
+        }
+        
+        val queryStringUpdate = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE {
+                ?result sta:hasvalue ?oldValue.
+            }
+            INSERT {
+                ?result sta:hasvalue ?newValue.
+            }
+            WHERE {
+                VALUES (?obs ?newValue) {
+                    $valuesClause
+                }
+                ?obs sta:hasresult ?result.
+                ?result sta:hasObservedProperty ?obsProp;
+                         sta:hasvalue ?oldValue.
+                ?obsProp sta:hasname "Air Temperature".
+            }
+        """.trimIndent()
+    
+    
+        val update = UpdateFactory.create(queryStringUpdate)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        val startTime = System.currentTimeMillis()
+        try {
+            updateProcessor.execute()
+            logger.debug("Random people count updated successfully")
+        } catch (e: Exception) {
+            logger.debug("Failed to update random people count: $e")
+        }
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
     }
 }

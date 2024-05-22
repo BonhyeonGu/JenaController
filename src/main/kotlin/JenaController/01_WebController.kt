@@ -290,57 +290,42 @@ class WebController {
 
 //=====================================================================================================
 
-    @GetMapping("/leveltest")
+    @GetMapping("/levelUpdate0")
     fun levelupdate(model: Model): String {
-        logger.debug("User Request /levelupdate")
-        val startTime = System.currentTimeMillis() 
-        ontQ.levelUpdate()
-        val endTime = System.currentTimeMillis()
-        val executionTime = endTime - startTime
+        logger.debug("User Request /levelUpdate0")
+        val executionTime = ontQ.levelUpdate0()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-    @GetMapping("/leveltest2")
+    @GetMapping("/levelUpdate1")
     fun levelupdate2(model: Model): String {
-        logger.debug("User Request /levelupdate2")
-        val startTime = System.currentTimeMillis() 
-        ontQ.levelUpdate2()
-        val endTime = System.currentTimeMillis()
-        val executionTime = endTime - startTime
+        logger.debug("User Request /levelUpdate1")
+        val executionTime = ontQ.levelUpdate1()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-    @GetMapping("/leveltest3")
-    fun levelupdate3(model: Model): String {
-        logger.debug("User Request /levelupdate3")
-        val startTime = System.currentTimeMillis() 
-        ontQ.levelUpdate3()
-        val endTime = System.currentTimeMillis()
-        val executionTime = endTime - startTime
+    @GetMapping("/tempUpdate0")
+    fun temptest(model: Model): String {
+        logger.debug("User Request /temptest")
+        val executionTime = ontQ.debugVisitUpdate()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-    @GetMapping("/visitTest")
-    fun visitTest(model: Model): String {
-        logger.debug("User Request /visitTest")
-        val startTime = System.currentTimeMillis()
-        ontQ.visitTest()
-        val endTime = System.currentTimeMillis()
-        val executionTime = endTime - startTime
+    @GetMapping("/debugVisitUpdate")
+    fun visitUpdate(model: Model): String {
+        logger.debug("User Request /debugVisitUpdate")
+        val executionTime = ontQ.debugVisitUpdate()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
-    }   
+    }
 
-    @GetMapping("/visitTest2")
-    fun visitTest2(model: Model): String {
-        logger.debug("User Request /visitTest2")
-        val startTime = System.currentTimeMillis()
-        ontQ.visitTest2()
-        val endTime = System.currentTimeMillis()
-        val executionTime = endTime - startTime
+    @GetMapping("/debugTempUpdate")
+    fun tempUpdate(model: Model): String {
+        logger.debug("User Request /debugTempUpdate")
+        val executionTime = ontQ.debugTempUpdate()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }   
