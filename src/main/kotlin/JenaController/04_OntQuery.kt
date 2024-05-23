@@ -19,6 +19,8 @@ import org.apache.jena.rdf.model.ModelFactory
 
 import org.apache.jena.query.ResultSetFormatter
 
+//트랜잭션 관련
+import org.apache.jena.tdb2.TDB2Factory
 
 class OntQuery(val ont:OntModel) {
     companion object {
@@ -443,8 +445,9 @@ class OntQuery(val ont:OntModel) {
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
         updateProcessor.execute()
     }
+
     
-    fun tempMax(): String {
+    fun tempMax(): List<Map<String, String>> {
         val queryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -468,36 +471,40 @@ class OntQuery(val ont:OntModel) {
                 ?area tsc:hasName ?areaName.
                 ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
                 ?latestObservation sta:hasresultTime ?resultTime;
-                                  sta:hasresult [
-                                      sta:hasObservedProperty ?obsProp;
-                                      sta:hasvalue ?maxTemperature
-                                  ].
+                                sta:hasresult [
+                                    sta:hasObservedProperty ?obsProp;
+                                    sta:hasvalue ?maxTemperature
+                                ].
                 ?obsProp sta:hasname "Air Temperature".
             }
             ORDER BY DESC(?maxTemperature)
         """.trimIndent()
         
+        // SPARQL 쿼리 생성
         val query = QueryFactory.create(queryString)
-        val dataset = DatasetFactory.create(ModelFactory.createDefaultModel())
-        var resultString: String? = null
-    
-        try {
-            dataset.begin(ReadWrite.READ)
-            QueryExecutionFactory.create(query, dataset).use { qexec ->
-                val startTime = System.currentTimeMillis()
-                val resultSet: ResultSet = qexec.execSelect()
-                val endTime = System.currentTimeMillis()
-                resultString = ResultSetFormatter.asText(resultSet)
-                resultString += "\nQuery Execution Time: ${endTime - startTime} ms"
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            resultString = "Error occurred: ${e.message}"
-        } finally {
-            dataset.end()
+        
+        // 결과를 담을 리스트 초기화
+        val results = mutableListOf<Map<String, String>>()
+        
+        // 쿼리 실행
+        val qexec = QueryExecutionFactory.create(query, ont)
+        val resultSet = qexec.execSelect()
+        
+        while (resultSet.hasNext()) {
+            val qs = resultSet.nextSolution()
+            val resultRow = mutableMapOf<String, String>()
+            
+            resultRow["areaName"] = qs.getLiteral("areaName").string
+            resultRow["resultTime"] = qs.getLiteral("resultTime").string
+            resultRow["temperature"] = qs.getLiteral("temperature").string
+            
+            results.add(resultRow)
         }
-        return resultString ?: "No results found"
+        
+        qexec.close()
+        return results
     }
+
 
     fun old_visitTest() {
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model

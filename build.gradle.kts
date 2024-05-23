@@ -19,15 +19,21 @@ repositories {
 }
 
 dependencies {
+	// Spring
 	implementation("org.springframework.boot:spring-boot-starter")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.jetbrains.kotlin:kotlin-reflect") 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	
+	// Logback
 	implementation("ch.qos.logback:logback-classic:1.4.9") // Logback Classic
 	implementation("ch.qos.logback:logback-core:1.4.9")
-    //implementation("org.slf4j:slf4j-api:2.0.7") // SLF4J API
+
+	// Jena
     implementation("org.apache.jena", "apache-jena-libs", "4.9.0")
+
+	// JSON Read
 	implementation("org.json:json:20211205")
 }
 
