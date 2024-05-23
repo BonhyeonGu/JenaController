@@ -17,6 +17,8 @@ import org.apache.jena.update.UpdateFactory
 import org.apache.jena.update.UpdateProcessor
 import org.apache.jena.rdf.model.ModelFactory
 
+import org.apache.jena.query.ResultSetFormatter
+
 
 class OntQuery(val ont:OntModel) {
     companion object {
@@ -440,6 +442,61 @@ class OntQuery(val ont:OntModel) {
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
         updateProcessor.execute()
+    }
+    
+    fun tempMax(): String {
+        val queryString = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        
+            SELECT ?areaName ?resultTime ?temperature
+            WHERE {
+                {
+                    SELECT ?area (MAX(?temperature) AS ?maxTemperature)
+                    WHERE {
+                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
+                        ?observation sta:hasresultTime ?resultTime.
+                        ?observation sta:hasresult [
+                            sta:hasObservedProperty ?obsProp;
+                            sta:hasvalue ?temperature
+                        ].
+                        ?obsProp sta:hasname "Air Temperature".
+                    }
+                    GROUP BY ?area
+                }
+                ?area tsc:hasName ?areaName.
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
+                ?latestObservation sta:hasresultTime ?resultTime;
+                                  sta:hasresult [
+                                      sta:hasObservedProperty ?obsProp;
+                                      sta:hasvalue ?maxTemperature
+                                  ].
+                ?obsProp sta:hasname "Air Temperature".
+            }
+            ORDER BY DESC(?maxTemperature)
+        """.trimIndent()
+        
+        val query = QueryFactory.create(queryString)
+        val dataset = DatasetFactory.create(ModelFactory.createDefaultModel())
+        var resultString: String? = null
+    
+        try {
+            dataset.begin(ReadWrite.READ)
+            QueryExecutionFactory.create(query, dataset).use { qexec ->
+                val startTime = System.currentTimeMillis()
+                val resultSet: ResultSet = qexec.execSelect()
+                val endTime = System.currentTimeMillis()
+                resultString = ResultSetFormatter.asText(resultSet)
+                resultString += "\nQuery Execution Time: ${endTime - startTime} ms"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            resultString = "Error occurred: ${e.message}"
+        } finally {
+            dataset.end()
+        }
+        return resultString ?: "No results found"
     }
 
     fun old_visitTest() {
