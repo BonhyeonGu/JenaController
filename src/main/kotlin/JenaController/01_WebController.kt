@@ -290,42 +290,55 @@ class WebController {
 
 //=====================================================================================================
 
-    @GetMapping("/levelUpdate0")
-    fun levelupdate(model: Model): String {
-        logger.debug("User Request /levelUpdate0")
-        val executionTime = ontQ.levelUpdate0()
+    @GetMapping("/updateLevel0")
+    fun updateLevel0(model: Model): String {
+        logger.debug("User Request /updateLevel0")
+        val executionTime = ontQ.updateLevel0()
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
+    
+
+    @GetMapping("/updateLevel1")
+    fun updateLevel1(model: Model): String {
+        logger.debug("User Request /updateLevel1")
+        val executionTime = ontQ.updateLevel1()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-    @GetMapping("/levelUpdate1")
-    fun levelupdate2(model: Model): String {
-        logger.debug("User Request /levelUpdate1")
-        val executionTime = ontQ.levelUpdate1()
+
+    @GetMapping("/selectTempMax0")
+    fun selectTempMax0(model: Model): String {
+        logger.debug("User Request /selectTempMax0")
+        val resultList = ontQ.selectTempMax0()
+        if (resultList.isNotEmpty()) {
+            model.addAttribute("message", """
+                Execution time: $resultList[0] ms\n\n
+                Area Name : $resultList[1]\n
+                Obs Time : $resultList[2]\n
+                Temperature value : $resultList[3]
+            """)
+        } else {
+            model.addAttribute("message", "No results found")
+        }
+        return "index"
+    }
+
+
+    @GetMapping("/debugUpdateVisitRand")
+    fun debugUpdateVisitRand(model: Model): String {
+        logger.debug("User Request /debugUpdateVisitRand")
+        val executionTime = ontQ.debugUpdateVisitRand()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-    @GetMapping("/tempUpdate0")
-    fun temptest(model: Model): String {
-        logger.debug("User Request /temptest")
-        val executionTime = ontQ.debugVisitUpdate()
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
 
-    @GetMapping("/debugVisitUpdate")
-    fun visitUpdate(model: Model): String {
-        logger.debug("User Request /debugVisitUpdate")
-        val executionTime = ontQ.debugVisitUpdate()
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-
-    @GetMapping("/debugTempUpdate")
-    fun tempUpdate(model: Model): String {
-        logger.debug("User Request /debugTempUpdate")
-        val executionTime = ontQ.debugTempUpdate()
+    @GetMapping("/debugUpdateTempRand")
+    fun debugUpdateTempRand(model: Model): String {
+        logger.debug("User Request /debugUpdateTempRand")
+        val executionTime = ontQ.debugUpdateTempRand()
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }   

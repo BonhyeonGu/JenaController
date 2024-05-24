@@ -280,8 +280,241 @@ class OntQuery(val ont:OntModel) {
         return qexec.execSelect()
     }
 
-    //paper
-    fun levelUpdate0(): Long {
+    // Debug
+
+    fun debugUpdateVisitRand(): Long {
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+    
+        // Step 1: Fetch all Observations
+        val observations = fetchObservations(dataset)
+    
+        // Step 2: Generate random people counts for each Observation
+        val peopleCounts = observations.map { generateRandomPeople() }
+    
+        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+            "(<${obs.second}> \"$count\"^^xsd:integer)"
+        }
+        
+        val queryStringUpdate = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE {
+                ?result sta:hasvalue ?oldValue.
+            }
+            INSERT {
+                ?result sta:hasvalue ?newValue.
+            }
+            WHERE {
+                VALUES (?obs ?newValue) {
+                    $valuesClause
+                }
+                ?obs sta:hasresult ?result.
+                ?result sta:hasObservedProperty ?obsProp;
+                         sta:hasvalue ?oldValue.
+                ?obsProp sta:hasname "Visit".
+            }
+        """.trimIndent()
+    
+    
+        val update = UpdateFactory.create(queryStringUpdate)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        val startTime = System.currentTimeMillis()
+        try {
+            updateProcessor.execute()
+            logger.debug("Random people count updated successfully")
+        } catch (e: Exception) {
+            logger.debug("Failed to update random people count: $e")
+        }
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
+    }
+
+
+    fun debugUpdateTempRand(): Long {
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+    
+        // Step 1: Fetch all Observations
+        val observations = fetchObservations(dataset)
+    
+        // Step 2: Generate random people counts for each Observation
+        val peopleCounts = observations.map { generateRandomTemp() }
+    
+        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+            "(<${obs.second}> \"$count\"^^xsd:double)"
+        }
+        
+        val queryStringUpdate = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE {
+                ?result sta:hasvalue ?oldValue.
+            }
+            INSERT {
+                ?result sta:hasvalue ?newValue.
+            }
+            WHERE {
+                VALUES (?obs ?newValue) {
+                    $valuesClause
+                }
+                ?obs sta:hasresult ?result.
+                ?result sta:hasObservedProperty ?obsProp;
+                         sta:hasvalue ?oldValue.
+                ?obsProp sta:hasname "Air Temperature".
+            }
+        """.trimIndent()
+    
+    
+        val update = UpdateFactory.create(queryStringUpdate)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        val startTime = System.currentTimeMillis()
+        try {
+            updateProcessor.execute()
+            logger.debug("Random people count updated successfully")
+        } catch (e: Exception) {
+            logger.debug("Failed to update random people count: $e")
+        }
+        val endTime = System.currentTimeMillis()
+        return endTime - startTime
+    }
+
+    fun debugVisitUpdate_OLD() {
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+    
+        // Step 1: Fetch all Areas
+        val areas = countArea(dataset)
+    
+        // Step 2: Generate random people counts
+        val peopleCounts = areas.map { generateRandomPeople() }
+    
+        // Step 3: Update SPARQL query
+        val queryStringUpdate = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE {
+                ?result sta:hasvalue ?oldValue.
+            }
+            INSERT {
+                ?result sta:hasvalue ?newValue.
+            }
+            WHERE {
+                VALUES (?area ?newValue) {
+                    ${areas.zip(peopleCounts).joinToString("\n") { (area, count) -> "(<$area> \"$count\"^^xsd:integer)" }}
+                }
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
+                ?obs sta:hasresult ?result.
+                ?result sta:hasObservedProperty ?obsProp;
+                         sta:hasvalue ?oldValue.
+                ?obsProp sta:hasname "Visit".
+            }
+        """.trimIndent()
+    
+        val update = UpdateFactory.create(queryStringUpdate)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+    
+        try {
+            updateProcessor.execute()
+            logger.debug("Random people count updated successfully")
+        } catch (e: Exception) {
+            logger.debug("Failed to update random people count: $e")
+        }
+    }
+
+
+    fun generateRandomPeople(): String {
+        // 각 레벨에 해당하는 인원 수 범위 정의
+        val ranges = listOf(
+            1..4999,    // Level A
+            5000..6999, // Level B
+            7000..10799, // Level C
+            10800..13899, // Level D
+            13900..19999, // Level E
+            20000..30000  // Level F, 최대값은 예시로 30000을 설정
+        )
+        val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
+        return (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+    }
+
+
+    fun generateRandomTemp(): String {
+        val ranges = listOf(
+            -10.0..25.0
+        )
+        val selectedRange = ranges.random()
+        val randomValue = Random.nextDouble(selectedRange.start, selectedRange.endInclusive)
+        return String.format("%.2f", randomValue)
+    }
+
+
+    fun countArea(dataset: Dataset): List<String> {
+        val fetchAreasQueryString = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            
+            SELECT ?area WHERE {
+                ?area a tsc:Area.
+            }
+        """.trimIndent()
+    
+        val query = QueryFactory.create(fetchAreasQueryString)
+        val qexec = QueryExecutionFactory.create(query, dataset)
+    
+        val areas = mutableListOf<String>()
+        try {
+            val results = qexec.execSelect()
+            while (results.hasNext()) {
+                val soln = results.nextSolution()
+                areas.add(soln.getResource("area").uri)
+            }
+        } catch (e: Exception) {
+            logger.debug("Failed to fetch areas: $e")
+        } finally {
+            qexec.close()
+        }
+        return areas
+    }
+
+
+    fun fetchObservations(dataset: Dataset): List<Pair<String, String>> {
+        val fetchObservationsQueryString = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            
+            SELECT ?area ?obs WHERE {
+                ?area a tsc:Area.
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
+            }
+        """.trimIndent()
+    
+        val query = QueryFactory.create(fetchObservationsQueryString)
+        val qexec = QueryExecutionFactory.create(query, dataset)
+    
+        val observations = mutableListOf<Pair<String, String>>()
+        try {
+            val results = qexec.execSelect()
+            while (results.hasNext()) {
+                val soln = results.nextSolution()
+                val area = soln.getResource("area").uri
+                val obs = soln.getResource("obs").uri
+                observations.add(area to obs)
+            }
+        } catch (e: Exception) {
+            logger.debug("Failed to fetch observations: $e")
+        } finally {
+            qexec.close()
+        }
+        return observations
+    }
+
+    // Know
+
+    fun updateLevel0(): Long {
         val queryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -340,7 +573,8 @@ class OntQuery(val ont:OntModel) {
         return endTime - startTime
     }
 
-    fun levelUpdate1(): Long {
+
+    fun updateLevel1(): Long {
         val queryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -399,7 +633,8 @@ class OntQuery(val ont:OntModel) {
         return endTime - startTime
     }
 
-    fun levelUpdate2OldDoesntUse() {
+
+    fun updateLevel2_OLD() {
         val queryString = """
         PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
         PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
@@ -447,16 +682,16 @@ class OntQuery(val ont:OntModel) {
     }
 
     
-    fun tempMax(): List<Map<String, String>> {
+    fun selectTempMax0(): List<String> {
         val queryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        
+            
             SELECT ?areaName ?resultTime ?temperature
             WHERE {
                 {
-                    SELECT ?area (MAX(?temperature) AS ?maxTemperature)
+                    SELECT ?area ?resultTime (MAX(?temperature) AS ?maxTemperature)
                     WHERE {
                         ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
                         ?observation sta:hasresultTime ?resultTime.
@@ -466,273 +701,37 @@ class OntQuery(val ont:OntModel) {
                         ].
                         ?obsProp sta:hasname "Air Temperature".
                     }
-                    GROUP BY ?area
+                    GROUP BY ?area ?resultTime
+                    ORDER BY DESC(?maxTemperature)
+                    LIMIT 1
                 }
                 ?area tsc:hasName ?areaName.
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
-                ?latestObservation sta:hasresultTime ?resultTime;
-                                sta:hasresult [
-                                    sta:hasObservedProperty ?obsProp;
-                                    sta:hasvalue ?maxTemperature
-                                ].
-                ?obsProp sta:hasname "Air Temperature".
             }
-            ORDER BY DESC(?maxTemperature)
         """.trimIndent()
         
         // SPARQL 쿼리 생성
         val query = QueryFactory.create(queryString)
         
-        // 결과를 담을 리스트 초기화
-        val results = mutableListOf<Map<String, String>>()
-        
         // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
-        val resultSet = qexec.execSelect()
         
-        while (resultSet.hasNext()) {
+        val startTime = System.currentTimeMillis()
+        val resultSet = qexec.execSelect()
+        val endTime = System.currentTimeMillis()
+    
+        // 파싱
+        var resultList: List<String> = emptyList()
+        if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
-            val resultRow = mutableMapOf<String, String>()
-            
-            resultRow["areaName"] = qs.getLiteral("areaName").string
-            resultRow["resultTime"] = qs.getLiteral("resultTime").string
-            resultRow["temperature"] = qs.getLiteral("temperature").string
-            
-            results.add(resultRow)
+            resultList = listOf(
+                (endTime - startTime).toString(), // 소모시간
+                qs.getLiteral("areaName").string,
+                qs.getLiteral("resultTime").string,
+                qs.getLiteral("maxTemperature").string
+            )
         }
         
         qexec.close()
-        return results
-    }
-
-
-    fun old_visitTest() {
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Areas
-        val areas = countArea(dataset)
-    
-        // Step 2: Generate random people counts
-        val peopleCounts = areas.map { generateRandomPeople() }
-    
-        // Step 3: Update SPARQL query
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?area ?newValue) {
-                    ${areas.zip(peopleCounts).joinToString("\n") { (area, count) -> "(<$area> \"$count\"^^xsd:integer)" }}
-                }
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Visit".
-            }
-        """.trimIndent()
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-    }
-    
-
-    fun countArea(dataset: Dataset): List<String> {
-        val fetchAreasQueryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            
-            SELECT ?area WHERE {
-                ?area a tsc:Area.
-            }
-        """.trimIndent()
-    
-        val query = QueryFactory.create(fetchAreasQueryString)
-        val qexec = QueryExecutionFactory.create(query, dataset)
-    
-        val areas = mutableListOf<String>()
-        try {
-            val results = qexec.execSelect()
-            while (results.hasNext()) {
-                val soln = results.nextSolution()
-                areas.add(soln.getResource("area").uri)
-            }
-        } catch (e: Exception) {
-            logger.debug("Failed to fetch areas: $e")
-        } finally {
-            qexec.close()
-        }
-        return areas
-    }
-
-
-    fun generateRandomPeople(): String {
-        // 각 레벨에 해당하는 인원 수 범위 정의
-        val ranges = listOf(
-            1..4999,    // Level A
-            5000..6999, // Level B
-            7000..10799, // Level C
-            10800..13899, // Level D
-            13900..19999, // Level E
-            20000..30000  // Level F, 최대값은 예시로 30000을 설정
-        )
-        val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
-        return (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
-    }
-    
-    
-    fun fetchObservations(dataset: Dataset): List<Pair<String, String>> {
-        val fetchObservationsQueryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            
-            SELECT ?area ?obs WHERE {
-                ?area a tsc:Area.
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs.
-            }
-        """.trimIndent()
-    
-        val query = QueryFactory.create(fetchObservationsQueryString)
-        val qexec = QueryExecutionFactory.create(query, dataset)
-    
-        val observations = mutableListOf<Pair<String, String>>()
-        try {
-            val results = qexec.execSelect()
-            while (results.hasNext()) {
-                val soln = results.nextSolution()
-                val area = soln.getResource("area").uri
-                val obs = soln.getResource("obs").uri
-                observations.add(area to obs)
-            }
-        } catch (e: Exception) {
-            logger.debug("Failed to fetch observations: $e")
-        } finally {
-            qexec.close()
-        }
-        return observations
-    }
-    
-
-    fun debugVisitUpdate(): Long {
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Observations
-        val observations = fetchObservations(dataset)
-    
-        // Step 2: Generate random people counts for each Observation
-        val peopleCounts = observations.map { generateRandomPeople() }
-    
-        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-            "(<${obs.second}> \"$count\"^^xsd:integer)"
-        }
-        
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Visit".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        return endTime - startTime
-    }
-
-
-    fun generateRandomTemp(): String {
-        val ranges = listOf(
-            -10.0..25.0
-        )
-        val selectedRange = ranges.random()
-        val randomValue = Random.nextDouble(selectedRange.start, selectedRange.endInclusive)
-        return String.format("%.2f", randomValue)
-    }
-
-    fun debugTempUpdate(): Long {
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Observations
-        val observations = fetchObservations(dataset)
-    
-        // Step 2: Generate random people counts for each Observation
-        val peopleCounts = observations.map { generateRandomTemp() }
-    
-        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-            "(<${obs.second}> \"$count\"^^xsd:double)"
-        }
-        
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Air Temperature".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        return endTime - startTime
+        return resultList
     }
 }
