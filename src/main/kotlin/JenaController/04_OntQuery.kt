@@ -589,29 +589,32 @@ class OntQuery(val ont:OntModel) {
             } WHERE {
                 ?city tsc:hasArea ?area.
                 ?area tsc:hasSquareMeter ?sqm.
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToresult ?resultResource;
-                    sta:pointToMultiObservedProperty [
-                        sta:hasname "Visit"
-                    ]
-                ].
-                ?resultResource sta:hasvalue ?resultValue;
-                                sta:isresultByObservation [
-                                    sta:hasresultTime ?resultTime
-                                ].
+                ?obsProp sta:hasname "Visit".
+            
                 {
                     SELECT ?area (MAX(?resultTime) AS ?latestTime)
                     WHERE {
                         ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                            sta:pointToresult/sta:isresultByObservation [
-                                sta:hasresultTime ?resultTime
-                            ]
+                            sta:pointToMultiObservedProperty ?obsProp;
+                            sta:pointToresult/sta:isresultByObservation ?observation
                         ].
+                        ?observation sta:hasresultTime ?resultTime.
+                        ?obsProp sta:hasname "Visit".
                     }
                     GROUP BY ?area
                 }
-                FILTER(?resultTime = ?latestTime)
-                BIND(xsd:decimal(?resultValue) AS ?people)
+            
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToMultiObservedProperty ?obsProp;
+                    sta:pointToresult/sta:isresultByObservation ?latestObservation
+                ].
+                ?latestObservation sta:hasresultTime ?latestTime;
+                                sta:hasresult [
+                                    sta:hasObservedProperty ?obsProp;
+                                    sta:hasvalue ?count
+                                ].
+            
+                BIND(xsd:decimal(?count) AS ?people)
                 BIND(?people / ?sqm AS ?peoplePerSqM)
             
                 OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
@@ -620,7 +623,7 @@ class OntQuery(val ont:OntModel) {
                 OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
                 OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
+            }        
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
