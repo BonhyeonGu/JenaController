@@ -314,10 +314,28 @@ class WebController {
         val resultList = ontQ.selectTempMax0()
         if (resultList.isNotEmpty()) {
             model.addAttribute("message", """
-                Execution time: $resultList[0] ms\n\n
-                Area Name : $resultList[1]\n
-                Obs Time : $resultList[2]\n
-                Temperature value : $resultList[3]
+                Execution time: ${resultList[0]} ms<br><br>
+                Area Name : ${resultList[1]}<br>
+                Obs Time : ${resultList[2]}<br>
+                Temperature value : ${resultList[3]}
+            """)
+        } else {
+            model.addAttribute("message", "No results found")
+        }
+        return "index"
+    }
+
+
+    @GetMapping("/selectTempMax1")
+    fun selectTempMax1(model: Model): String {
+        logger.debug("User Request /selectTempMax1")
+        val resultList = ontQ.selectTempMax1()
+        if (resultList.isNotEmpty()) {
+            model.addAttribute("message", """
+                Execution time: ${resultList[0]} ms<br><br>
+                Area Name : ${resultList[1]}<br>
+                Obs Time : ${resultList[2]}<br>
+                Temperature value : ${resultList[3]}
             """)
         } else {
             model.addAttribute("message", "No results found")

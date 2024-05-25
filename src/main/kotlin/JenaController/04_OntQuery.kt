@@ -688,7 +688,7 @@ class OntQuery(val ont:OntModel) {
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             
-            SELECT ?areaName ?resultTime ?temperature
+            SELECT ?areaName ?resultTime ?maxTemperature
             WHERE {
                 {
                     SELECT ?area ?resultTime (MAX(?temperature) AS ?maxTemperature)
@@ -728,6 +728,57 @@ class OntQuery(val ont:OntModel) {
                 qs.getLiteral("areaName").string,
                 qs.getLiteral("resultTime").string,
                 qs.getLiteral("maxTemperature").string
+            )
+        }
+        
+        qexec.close()
+        return resultList
+    }
+
+
+    fun selectTempMax1(): List<String> {
+        val queryString = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            SELECT ?areaName ?resultTime ?temperature
+            WHERE {
+                ?area tsc:hasName ?areaName .
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToresult ?resultResource;
+                    sta:pointToMultiObservedProperty [
+                        sta:hasname "Air Temperature"
+                    ]
+                ].
+                ?resultResource sta:hasvalue ?temperature;
+                                sta:isresultByObservation [
+                                    sta:hasresultTime ?resultTime
+                                ].
+            }
+            ORDER BY DESC(?temperature)
+            LIMIT 1
+        """.trimIndent()
+        
+        // SPARQL 쿼리 생성
+        val query = QueryFactory.create(queryString)
+        
+        // 쿼리 실행
+        val qexec = QueryExecutionFactory.create(query, ont)
+        
+        val startTime = System.currentTimeMillis()
+        val resultSet = qexec.execSelect()
+        val endTime = System.currentTimeMillis()
+    
+        // 파싱
+        var resultList: List<String> = emptyList()
+        if (resultSet.hasNext()) {
+            val qs = resultSet.nextSolution()
+            resultList = listOf(
+                (endTime - startTime).toString(), // 소모시간
+                qs.getLiteral("areaName").string,
+                qs.getLiteral("resultTime").string,
+                qs.getLiteral("temperature").string
             )
         }
         
