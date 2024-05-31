@@ -520,31 +520,34 @@ class OntQuery(val ont:OntModel) {
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             
-            DELETE WHERE {
+            DELETE {
                 ?area tsc:hasLevel ?oldLevel.
-            };
-            
+            } 
             INSERT {
                 ?area tsc:hasLevel ?level.
-            } WHERE {
+            } 
+            WHERE {
                 ?city tsc:hasArea ?area.
                 ?area tsc:hasSquareMeter ?sqm.
-                ?obsProp sta:hasname "Visit".
+            
                 {
                     SELECT ?area (MAX(?resultTime) AS ?latestTime)
                     WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
-                        ?observation sta:hasresultTime ?resultTime.
+                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                            sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                            sta:pointToresult/sta:isresultByObservation/sta:hasresultTime ?resultTime
+                        ].
                     }
                     GROUP BY ?area
                 }
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
-                ?latestObservation sta:hasresultTime ?latestTime;
-                                sta:hasresult [
-                                    sta:hasObservedProperty ?obsProp;
-                                    sta:hasvalue ?count
-                                ].
-                
+            
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                    sta:pointToresult ?result
+                ].
+                ?result sta:isresultByObservation/sta:hasresultTime ?latestTime;
+                        sta:hasvalue ?count.
+            
                 BIND(xsd:decimal(?count) AS ?people)
                 BIND(?people / ?sqm AS ?peoplePerSqM)
             
@@ -554,7 +557,7 @@ class OntQuery(val ont:OntModel) {
                 OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
                 OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
+            }        
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
@@ -589,89 +592,25 @@ class OntQuery(val ont:OntModel) {
             } WHERE {
                 ?city tsc:hasArea ?area.
                 ?area tsc:hasSquareMeter ?sqm.
-                ?obsProp sta:hasname "Visit".
-                
-                # 최신 관찰 시간과 결과 가져오기
+            
                 {
                     SELECT ?area (MAX(?resultTime) AS ?latestTime)
                     WHERE {
                         ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                            sta:pointToMultiObservedProperty ?obsProp;
-                            sta:pointToresult/sta:isresultByObservation ?observation
+                            sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                            sta:pointToresult/sta:isresultByObservation/sta:hasresultTime ?resultTime
                         ].
-                        ?observation sta:hasresultTime ?resultTime.
                     }
                     GROUP BY ?area
                 }
-            
-                # 최신 관찰 결과와 레벨 결정
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToresult/sta:isresultByObservation ?latestObservation
-                ].
-                ?latestObservation sta:hasresultTime ?latestTime;
-                                sta:hasresult [
-                                    sta:hasObservedProperty ?obsProp;
-                                    sta:hasvalue ?count
-                                ].
-            
-                # 인구 밀도 계산
-                BIND(xsd:decimal(?count) AS ?people)
-                BIND(?people / ?sqm AS ?peoplePerSqM)
-            
-                # 레벨 결정
-                OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-                OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-                OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-                OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-                OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-                OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
-        """.trimIndent()
-    
-        val update = UpdateFactory.create(queryString)
-        val dataset = DatasetFactory.create(ont)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
-        val startTime = System.currentTimeMillis()
-        updateProcessor.execute()
-        val endTime = System.currentTimeMillis()
-        return endTime - startTime
-    }
-
-
-    fun updateLevel2(): Long {
-        val queryString = """
-        PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE WHERE {
-                ?area tsc:hasLevel ?oldLevel.
-            };
-            
-            INSERT {
-                ?area tsc:hasLevel ?level.
-            } WHERE {
-                ?city tsc:hasArea ?area.
-                ?area tsc:hasSquareMeter ?sqm.
-                ?obsProp sta:hasname "Visit".
-                {
-                    SELECT ?area (MAX(?resultTime) AS ?latestTime)
-                    WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
-                        ?observation sta:hasresultTime ?resultTime.
-                    }
-                    GROUP BY ?area
-                }
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToresult/sta:isresultByObservation ?latestObservation
-                ].
-                ?latestObservation sta:hasresultTime ?latestTime;
-                                sta:hasresult [
-                                    sta:hasObservedProperty ?obsProp;
-                                    sta:hasvalue ?count
-                                ].
                 
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                    sta:pointToresult ?result
+                ].
+                ?result sta:isresultByObservation/sta:hasresultTime ?latestTime;
+                        sta:hasvalue ?count.
+                    
                 BIND(xsd:decimal(?count) AS ?people)
                 BIND(?people / ?sqm AS ?peoplePerSqM)
             
@@ -681,7 +620,7 @@ class OntQuery(val ont:OntModel) {
                 OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
                 OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
+            }        
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
@@ -692,54 +631,6 @@ class OntQuery(val ont:OntModel) {
         updateProcessor.execute()
         val endTime = System.currentTimeMillis()
         return endTime - startTime
-    }
-
-
-    fun updateLevel2_OLD() {
-        val queryString = """
-        PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-        PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        
-        # First, delete existing levels
-        DELETE WHERE {
-            ?area tsc:hasLevel ?oldLevel.
-        };
-        
-        # Then, insert new levels based on updated calculations
-        INSERT {
-            ?area tsc:hasLevel ?level.
-        }
-        WHERE {
-            # Find the unique node for the "Visit" ObservedProperty
-            ?visitProp a sta:ObservedProperty ;
-                       sta:hasname "Visit" .
-        
-            # Traverse to the associated values
-            ?visitProp sta:isObservedPropertyByresult ?resultResource .
-            ?resultResource sta:hasvalue ?resultValue .
-            
-            # Find associated areas
-            ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint/sta:pointToresult ?resultResource ;
-                  tsc:hasSquareMeter ?sqm .
-            
-            BIND(xsd:decimal(?resultValue) AS ?people)
-            BIND(?people / ?sqm AS ?peoplePerSqM)
-        
-            # Define levels based on peoplePerSqM
-            OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-            OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-            OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-            OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-            OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-            OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-        }        
-        """.trimIndent()
-    
-        val update = UpdateFactory.create(queryString)
-        val dataset = DatasetFactory.create(ont)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        updateProcessor.execute()
     }
 
     

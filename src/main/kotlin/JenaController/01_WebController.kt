@@ -308,15 +308,6 @@ class WebController {
     }
 
 
-    @GetMapping("/updateLevel2")
-    fun updateLevel2(model: Model): String {
-        logger.debug("User Request /updateLevel2")
-        val executionTime = ontQ.updateLevel2()
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-
-
     @GetMapping("/selectTempMax0")
     fun selectTempMax0(model: Model): String {
         logger.debug("User Request /selectTempMax0")
