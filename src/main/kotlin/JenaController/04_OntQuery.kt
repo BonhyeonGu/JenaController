@@ -520,33 +520,35 @@ class OntQuery(val ont:OntModel) {
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             
-            DELETE {
+            DELETE WHERE {
                 ?area tsc:hasLevel ?oldLevel.
-            } 
+            };
+            
             INSERT {
                 ?area tsc:hasLevel ?level.
-            } 
-            WHERE {
+            } WHERE {
                 ?city tsc:hasArea ?area.
                 ?area tsc:hasSquareMeter ?sqm.
-            
                 {
                     SELECT ?area (MAX(?resultTime) AS ?latestTime)
                     WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                            sta:pointToMultiObservedProperty/sta:hasname "Visit";
-                            sta:pointToresult/sta:isresultByObservation/sta:hasresultTime ?resultTime
-                        ].
+                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
+                        ?observation sta:hasresultTime ?resultTime;
+                                    sta:hasresult [
+                                        sta:hasObservedProperty ?obsProp;
+                                        sta:hasvalue ?count
+                                    ].
+                        ?obsProp sta:hasname "Visit".
                     }
                     GROUP BY ?area
                 }
-            
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
-                    sta:pointToresult ?result
-                ].
-                ?result sta:isresultByObservation/sta:hasresultTime ?latestTime;
-                        sta:hasvalue ?count.
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
+                ?latestObservation sta:hasresultTime ?latestTime;
+                                sta:hasresult [
+                                    sta:hasObservedProperty ?obsProp;
+                                    sta:hasvalue ?count
+                                ].
+                ?obsProp sta:hasname "Visit".
             
                 BIND(xsd:decimal(?count) AS ?people)
                 BIND(?people / ?sqm AS ?peoplePerSqM)
@@ -557,7 +559,7 @@ class OntQuery(val ont:OntModel) {
                 OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
                 OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }        
+            }
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
