@@ -1,28 +1,31 @@
 package JenaController
-
+//--------------------------------------------------------------------
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import kotlin.random.Random
-
+//--------------------------------------------------------------------
 import org.apache.jena.ontology.OntModel
+import org.apache.jena.query.Query
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
-
+//--------------------------------------------------------------------
 import org.apache.jena.query.Dataset
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.update.UpdateExecutionFactory
 import org.apache.jena.update.UpdateFactory
 import org.apache.jena.update.UpdateProcessor
 import org.apache.jena.rdf.model.ModelFactory
-
+//--------------------------------------------------------------------
 import org.apache.jena.query.ResultSetFormatter
+//--------------------------------------------------------------------
+import org.apache.jena.query.QueryExecution
+import org.apache.jena.query.ARQ
+import org.apache.jena.sparql.util.Context
+//--------------------------------------------------------------------
+import kotlin.random.Random
+import kotlin.booleanArrayOf
 
-//트랜잭션 관련
-import org.apache.jena.tdb2.TDB2Factory
-
-class OntQuery(val ont:OntModel) {
+class OntQuery(val ont: OntModel, val cache: Boolean) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
         val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
@@ -74,6 +77,17 @@ class OntQuery(val ont:OntModel) {
             }
         }
         return ret
+    }
+
+    fun contextSetting(execution: Any) {
+        val context: Context = when (execution) {
+            is QueryExecution -> execution.context
+            is UpdateProcessor -> execution.context
+            else -> throw IllegalArgumentException("Unsupported execution type")
+        }
+        context.set(ARQ.optimization, cache)
+        context.set(ARQ.enableExecutionTimeLogging, true)
+        context.set(ARQ.queryTimeout, 0)
     }
 
     fun browseQuery(q: String): List<Array<String>> {
@@ -320,7 +334,7 @@ class OntQuery(val ont:OntModel) {
     
         val update = UpdateFactory.create(queryStringUpdate)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
+        contextSetting(updateProcessor)
         val startTime = System.currentTimeMillis()
         try {
             updateProcessor.execute()
@@ -371,7 +385,7 @@ class OntQuery(val ont:OntModel) {
     
         val update = UpdateFactory.create(queryStringUpdate)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
+        contextSetting(updateProcessor)
         val startTime = System.currentTimeMillis()
         try {
             updateProcessor.execute()
@@ -565,6 +579,7 @@ class OntQuery(val ont:OntModel) {
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+        contextSetting(updateProcessor)
     
         //try {
         //    updateProcessor.execute()
@@ -628,7 +643,8 @@ class OntQuery(val ont:OntModel) {
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-    
+        contextSetting(updateProcessor)
+
         val startTime = System.currentTimeMillis()
         updateProcessor.execute()
         val endTime = System.currentTimeMillis()
@@ -668,7 +684,7 @@ class OntQuery(val ont:OntModel) {
         
         // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
-        
+        contextSetting(qexec)
         val startTime = System.currentTimeMillis()
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()
@@ -719,7 +735,7 @@ class OntQuery(val ont:OntModel) {
         
         // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
-        
+        contextSetting(qexec)
         val startTime = System.currentTimeMillis()
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()

@@ -1,43 +1,43 @@
 package JenaController
-
+//--------------------------------------------------------------------
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
+//--------------------------------------------------------------------
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
-//문자열을 랜더링없이 그대로
-import org.springframework.web.bind.annotation.ResponseBody
-//JSON변환을 위함
-import org.apache.jena.query.ResultSetFormatter
-import java.io.ByteArrayOutputStream
-
+import org.springframework.web.bind.annotation.ResponseBody // 문자열을 렌더링 없이 간단한 방법으로 출력
+//--------------------------------------------------------------------
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
-
+import org.apache.jena.query.ResultSetFormatter
+import org.apache.jena.ontology.OntModelSpec // RULE
+//--------------------------------------------------------------------
 import JenaController.Ontology
 import JenaController.Validate
 import JenaController.OntQuery
-
-import org.json.JSONObject
-
-
-import java.io.FileOutputStream
-
-import java.time.LocalDateTime
+//--------------------------------------------------------------------
+import java.time.LocalDateTime // 시간
 import java.time.format.DateTimeFormatter
+import java.io.FileOutputStream // 파일 입출력
+import org.json.JSONObject // JSON 객체
+import java.io.ByteArrayOutputStream // JSON 변환
+//--------------------------------------------------------------------
+
 
 @Controller
 class WebController {
     companion object {
-        private val logger: Logger = LoggerFactory.getLogger(WebController::class.java)
-        val ont = Ontology.ontologyModel
-        val ontQ = OntQuery(ont)
+        //val RULE = OntModelSpec.OWL_MEM_RULE_INF
+        val RULE = OntModelSpec.OWL_MEM_TRANS_INF
 
+        private val logger: Logger = LoggerFactory.getLogger(WebController::class.java)
+        val ont = Ontology(rule=RULE).ontologyModel
+        val ontQ = OntQuery(ont, cache=false)
     }
 
     fun modifyJsonResults(jsonResults: String, replacementMap: MutableMap<String, String>): String {
@@ -193,21 +193,6 @@ class WebController {
     
         return jsonResults
     }
-
-    /*
-    @GetMapping("/getGmlJSON/{gmlID}")
-    @ResponseBody
-    fun getGmlJSON(@PathVariable gmlID: String, model: Model): String {
-        val resultsList = ontQ.idToGML(gmlID)
-        
-        // ByteArrayOutputStream을 사용하여 결과를 JSON 형식으로 변환
-        val outputStream = ByteArrayOutputStream()
-        ResultSetFormatter.outputAsJSON(outputStream, resultsList)
-        val jsonResults = outputStream.toString("UTF-8")
-    
-        return jsonResults
-    }
-    */
 
     @GetMapping("/select/meta/{gmlID}")
     @ResponseBody
