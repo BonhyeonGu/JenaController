@@ -27,17 +27,50 @@ import java.io.FileOutputStream // 파일 입출력
 import org.json.JSONObject // JSON 객체
 import java.io.ByteArrayOutputStream // JSON 변환
 //--------------------------------------------------------------------
+import java.io.File
+import java.io.FileWriter
+import java.io.BufferedWriter
+//--------------------------------------------------------------------
 
 
 @Controller
-class WebController {
+class WebController : AutoCloseable {
     companion object {
-        //val RULE = OntModelSpec.OWL_MEM_RULE_INF
         val RULE = OntModelSpec.OWL_MEM_TRANS_INF
 
         private val logger: Logger = LoggerFactory.getLogger(WebController::class.java)
-        val ont = Ontology(rule=RULE).ontologyModel
-        val ontQ = OntQuery(ont, cache=false)
+        val ont = Ontology(rule = RULE).ontologyModel
+        val ontQ = OntQuery(ont, cache = false)
+        //-----------------------------------------------------------------------------
+        const val TRACE_TIME_SWITCH = true
+        val TRACE_FILE_NAME = "./" + "Test" + ".txt"
+        //-----------------------------------------------------------------------------
+    }
+
+    private var bufferedWriter: BufferedWriter? = null
+
+    init {
+        if (TRACE_TIME_SWITCH) {
+            File("RUNNING.txt").createNewFile()
+            val file = File(TRACE_FILE_NAME)
+            if (!file.exists()) {
+                file.createNewFile()
+                println("New test start\n")
+            }
+            val fileWriter = FileWriter(file, true)
+            bufferedWriter = BufferedWriter(fileWriter)
+        }
+    }
+
+    fun testWrite(message: String) {
+        bufferedWriter?.let {
+            it.write("$message\n")
+            it.flush()
+        }
+    }
+
+    override fun close() {
+        bufferedWriter?.close()
     }
 
     fun modifyJsonResults(jsonResults: String, replacementMap: MutableMap<String, String>): String {
@@ -175,6 +208,11 @@ class WebController {
         }
         val endTime = System.currentTimeMillis()
         val executionTime = endTime - startTime
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("save: $executionTime")
+        }
+
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
@@ -279,6 +317,11 @@ class WebController {
     fun updateLevel0(model: Model): String {
         logger.debug("User Request /updateLevel0")
         val executionTime = ontQ.updateLevel0()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("updateLevel0: $executionTime")
+        }
+
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
@@ -288,6 +331,11 @@ class WebController {
     fun updateLevel1(model: Model): String {
         logger.debug("User Request /updateLevel1")
         val executionTime = ontQ.updateLevel1()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("updateLevel1: $executionTime")
+        }
+
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
@@ -298,6 +346,11 @@ class WebController {
         logger.debug("User Request /selectTempMax0")
         val resultList = ontQ.selectTempMax0()
         if (resultList.isNotEmpty()) {
+            
+            if (TRACE_TIME_SWITCH) {
+                testWrite("selectTempMax0: ${resultList[0]}")
+            }
+
             model.addAttribute("message", """
                 Execution time: ${resultList[0]} ms<br><br>
                 Area Name : ${resultList[1]}<br>
@@ -316,6 +369,11 @@ class WebController {
         logger.debug("User Request /selectTempMax1")
         val resultList = ontQ.selectTempMax1()
         if (resultList.isNotEmpty()) {
+
+            if (TRACE_TIME_SWITCH) {
+                testWrite("selectTempMax1: ${resultList[0]}")
+            }
+
             model.addAttribute("message", """
                 Execution time: ${resultList[0]} ms<br><br>
                 Area Name : ${resultList[1]}<br>
@@ -333,6 +391,11 @@ class WebController {
     fun debugUpdateVisitRand(model: Model): String {
         logger.debug("User Request /debugUpdateVisitRand")
         val executionTime = ontQ.debugUpdateVisitRand()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("debugUpdateVisitRand: $executionTime")
+        }
+
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
@@ -342,6 +405,11 @@ class WebController {
     fun debugUpdateTempRand(model: Model): String {
         logger.debug("User Request /debugUpdateTempRand")
         val executionTime = ontQ.debugUpdateTempRand()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("debugUpdateTempRand: $executionTime")
+        }
+
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }   

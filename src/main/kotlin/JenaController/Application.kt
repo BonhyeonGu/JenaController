@@ -8,6 +8,7 @@ import java.io.File
 @SpringBootApplication
 class Application
 
+
 fun main(args: Array<String>) {
 	val runtime = Runtime.getRuntime()
 	val maxMemory = runtime.maxMemory() // 최대 힙 메모리 크기

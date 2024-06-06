@@ -21,6 +21,7 @@ import org.apache.jena.query.ResultSetFormatter
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.ARQ
 import org.apache.jena.sparql.util.Context
+import org.apache.jena.update.UpdateRequest
 //--------------------------------------------------------------------
 import kotlin.random.Random
 import kotlin.booleanArrayOf
@@ -79,15 +80,15 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return ret
     }
 
-    fun contextSetting(execution: Any) {
-        val context: Context = when (execution) {
-            is QueryExecution -> execution.context
-            is UpdateProcessor -> execution.context
-            else -> throw IllegalArgumentException("Unsupported execution type")
-        }
-        context.set(ARQ.optimization, cache)
-        context.set(ARQ.enableExecutionTimeLogging, true)
-        context.set(ARQ.queryTimeout, 0)
+    fun createUpdateExecution(updateRequest: UpdateRequest, dataset: Dataset): UpdateProcessor {
+        val context = Context()
+        context.set(ARQ.symLogExec, true)  // 질의 실행 로깅 활성화
+        context.set(ARQ.enableExecutionTimeLogging, true)  // 실행 시간 로깅 활성화
+        context.set(ARQ.optFilterPlacement, false)  // 필터 배치 최적화 비활성화
+        context.set(ARQ.optimization, false)  // 전반적인 최적화 비활성화
+        context.set(ARQ.queryTimeout, 0)  // 질의 타임아웃 설정 (0은 무제한)
+
+        return UpdateExecutionFactory.create(updateRequest, dataset, context)
     }
 
     fun browseQuery(q: String): List<Array<String>> {
@@ -334,7 +335,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     
         val update = UpdateFactory.create(queryStringUpdate)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        contextSetting(updateProcessor)
         val startTime = System.currentTimeMillis()
         try {
             updateProcessor.execute()
@@ -385,7 +385,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     
         val update = UpdateFactory.create(queryStringUpdate)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        contextSetting(updateProcessor)
         val startTime = System.currentTimeMillis()
         try {
             updateProcessor.execute()
@@ -575,18 +574,9 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
             }
         """.trimIndent()
-    
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        contextSetting(updateProcessor)
-    
-        //try {
-        //    updateProcessor.execute()
-        //    println("Update executed successfully")
-        //} catch (e: Exception) {
-        //    println("Failed to execute update: $e")
-        //}
+        val updateProcessor = createUpdateExecution(update, dataset)
         val startTime = System.currentTimeMillis()
         updateProcessor.execute()
         val endTime = System.currentTimeMillis()
@@ -643,7 +633,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        contextSetting(updateProcessor)
 
         val startTime = System.currentTimeMillis()
         updateProcessor.execute()
@@ -684,7 +673,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         
         // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
-        contextSetting(qexec)
         val startTime = System.currentTimeMillis()
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()
@@ -735,7 +723,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         
         // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
-        contextSetting(qexec)
         val startTime = System.currentTimeMillis()
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()

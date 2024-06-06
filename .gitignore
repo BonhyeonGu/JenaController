@@ -42,3 +42,6 @@ _db
 *.rdf
 *.ttl
 logs/
+
+RUNNING.txt
+Test.txt
