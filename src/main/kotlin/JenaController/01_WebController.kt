@@ -51,7 +51,7 @@ class WebController : AutoCloseable {
 
     init {
         if (TRACE_TIME_SWITCH) {
-            File("RUNNING.txt").createNewFile()
+            File("./RUNNING.txt").createNewFile()
             val file = File(TRACE_FILE_NAME)
             if (!file.exists()) {
                 file.createNewFile()
