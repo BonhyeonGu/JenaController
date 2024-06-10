@@ -599,7 +599,11 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             } WHERE {
                 ?city tsc:hasArea ?area.
                 ?area tsc:hasSquareMeter ?sqm.
-            
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
+                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                    sta:pointToresult ?result
+                ].
+                
                 {
                     SELECT ?area (MAX(?resultTime) AS ?latestTime)
                     WHERE {
@@ -611,13 +615,9 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                     GROUP BY ?area
                 }
                 
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
-                    sta:pointToresult ?result
-                ].
                 ?result sta:isresultByObservation/sta:hasresultTime ?latestTime;
                         sta:hasvalue ?count.
-                    
+            
                 BIND(xsd:decimal(?count) AS ?people)
                 BIND(?people / ?sqm AS ?peoplePerSqM)
             
@@ -627,7 +627,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
                 OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
                 OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }        
+            }
         """.trimIndent()
     
         val update = UpdateFactory.create(queryString)
@@ -647,25 +647,19 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
             
-            SELECT ?areaName ?resultTime ?maxTemperature
+            SELECT ?areaName ?resultTime ?temperature
             WHERE {
-                {
-                    SELECT ?area ?resultTime (MAX(?temperature) AS ?maxTemperature)
-                    WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
-                        ?observation sta:hasresultTime ?resultTime.
-                        ?observation sta:hasresult [
-                            sta:hasObservedProperty ?obsProp;
-                            sta:hasvalue ?temperature
-                        ].
-                        ?obsProp sta:hasname "Air Temperature".
-                    }
-                    GROUP BY ?area ?resultTime
-                    ORDER BY DESC(?maxTemperature)
-                    LIMIT 1
-                }
-                ?area tsc:hasName ?areaName.
+                ?area tsc:hasName ?areaName .
+                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
+                ?observation sta:hasresultTime ?resultTime.
+                ?observation sta:hasresult [
+                    sta:hasObservedProperty ?obsProp;
+                    sta:hasvalue ?temperature
+                ].
+                ?obsProp sta:hasname "Air Temperature".
             }
+            ORDER BY DESC(?temperature)
+            LIMIT 1                
         """.trimIndent()
         
         // SPARQL 쿼리 생성
