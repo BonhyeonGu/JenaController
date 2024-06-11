@@ -659,7 +659,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 ?obsProp sta:hasname "Air Temperature".
             }
             ORDER BY DESC(?temperature)
-            LIMIT 1                
+            LIMIT 1        
         """.trimIndent()
         
         // SPARQL 쿼리 생성
@@ -672,6 +672,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val endTime = System.currentTimeMillis()
     
         // 파싱
+        
         var resultList: List<String> = emptyList()
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
@@ -679,7 +680,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 (endTime - startTime).toString(), // 소모시간
                 qs.getLiteral("areaName").string,
                 qs.getLiteral("resultTime").string,
-                qs.getLiteral("maxTemperature").string
+                qs.getLiteral("temperature").string
             )
         }
         
@@ -722,6 +723,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val endTime = System.currentTimeMillis()
     
         // 파싱
+        
         var resultList: List<String> = emptyList()
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
