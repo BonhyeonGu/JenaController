@@ -683,7 +683,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 qs.getLiteral("temperature").string
             )
         }
-        
+
         qexec.close()
         return resultList
     }
@@ -700,17 +700,13 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 ?area tsc:hasName ?areaName .
                 ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
                     sta:pointToresult ?resultResource;
-                    sta:pointToMultiObservedProperty [
-                        sta:hasname "Air Temperature"
-                    ]
+                    sta:pointToMultiObservedProperty/sta:hasname "Air Temperature"
                 ].
                 ?resultResource sta:hasvalue ?temperature;
-                                sta:isresultByObservation [
-                                    sta:hasresultTime ?resultTime
-                                ].
+                                sta:isresultByObservation/sta:hasresultTime ?resultTime.
             }
             ORDER BY DESC(?temperature)
-            LIMIT 1
+            LIMIT 1            
         """.trimIndent()
         
         // SPARQL 쿼리 생성
@@ -723,7 +719,6 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val endTime = System.currentTimeMillis()
     
         // 파싱
-        
         var resultList: List<String> = emptyList()
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
