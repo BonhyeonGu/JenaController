@@ -53,15 +53,14 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 if (file.isFile) {
                     val content = file.readText()
                     queries[file.name.split(".")[0]] = content
-                    println(file.name)
-                    logger.info("Query Name: ${file.name}")
-                    logger.info(content)
+                    logger.info("Query Name: ${file.name.split(".")[0]}")
                 }
             }
 
         } else {
             logger.error("Can't found Qeuries")
         }
+        logger.info("")
     }
 
     fun enShort(inp: String): String {
@@ -568,10 +567,11 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     fun qUpdate(qName: String): Long {
         val queryString = queries[qName]?.trimIndent() ?: return -1.0.toLong()
         val update = UpdateFactory.create(queryString)
+        
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = createUpdateExecution(update, dataset)
 
-        val startTime = System.currentTimeMillis()
+        val startTime = System.currentTimeMillis()  
         updateProcessor.execute()
         val endTime = System.currentTimeMillis()
         
