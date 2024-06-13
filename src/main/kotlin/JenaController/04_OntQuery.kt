@@ -23,15 +23,45 @@ import org.apache.jena.query.ARQ
 import org.apache.jena.sparql.util.Context
 import org.apache.jena.update.UpdateRequest
 //--------------------------------------------------------------------
+import org.json.JSONObject
+import java.io.File
+//--------------------------------------------------------------------
 import kotlin.random.Random
 import kotlin.booleanArrayOf
 
 class OntQuery(val ont: OntModel, val cache: Boolean) {
+    private val queries: MutableMap<String, String> = mutableMapOf()
+
+    init {
+        reloadQuery()
+    }
+
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
         val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
+        val LOCALE_JSON_QUERIES = "./_Queries"
+    }
+    
+    fun reloadQuery() {
+        val folder = File(LOCALE_JSON_QUERIES)
+        if (folder.exists() && folder.isDirectory) {
+            val files = folder.listFiles()
+
+            files?.forEach { file ->
+                if (file.isFile) {
+                    val content = file.readText()
+                    queries[file.name.split(".")[0]] = content
+                    println(file.name)
+                    logger.info("Query Name: ${file.name}")
+                    logger.info(content)
+                }
+            }
+
+        } else {
+            logger.error("Can't found Qeuries")
+        }
     }
 
     fun enShort(inp: String): String {
@@ -92,7 +122,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
     fun browseQuery(q: String): List<Array<String>> {
-        logger.debug("Browse => ${q}")
+        logger.info("Browse => ${q}")
 
         val query = QueryFactory.create(q)
         val qexec = QueryExecutionFactory.create(query, ont)
@@ -184,6 +214,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val qexec = QueryExecutionFactory.create(query, ont)
         return qexec.execAsk()
     }
+
+//=============================================================================================
 
     fun bldgType(): ResultSet {
         val q = """
@@ -295,6 +327,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return qexec.execSelect()
     }
 
+//=============================================================================================
+
     // Debug
 
     fun debugUpdateVisitRand(): Long {
@@ -395,6 +429,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val endTime = System.currentTimeMillis()
         return endTime - startTime
     }
+
 
     fun debugVisitUpdate_OLD() {
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
@@ -525,211 +560,48 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return observations
     }
 
+
+//=============================================================================================
+
     // Know
 
-    fun updateLevel0(): Long {
-        val queryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE WHERE {
-                ?area tsc:hasLevel ?oldLevel.
-            };
-            
-            INSERT {
-                ?area tsc:hasLevel ?level.
-            } WHERE {
-                ?city tsc:hasArea ?area.
-                ?area tsc:hasSquareMeter ?sqm.
-                {
-                    SELECT ?area (MAX(?resultTime) AS ?latestTime)
-                    WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
-                        ?observation sta:hasresultTime ?resultTime;
-                                    sta:hasresult [
-                                        sta:hasObservedProperty ?obsProp;
-                                        sta:hasvalue ?count
-                                    ].
-                        ?obsProp sta:hasname "Visit".
-                    }
-                    GROUP BY ?area
-                }
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?latestObservation.
-                ?latestObservation sta:hasresultTime ?latestTime;
-                                sta:hasresult [
-                                    sta:hasObservedProperty ?obsProp;
-                                    sta:hasvalue ?count
-                                ].
-                ?obsProp sta:hasname "Visit".
-            
-                BIND(xsd:decimal(?count) AS ?people)
-                BIND(?people / ?sqm AS ?peoplePerSqM)
-            
-                OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-                OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-                OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-                OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-                OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-                OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
-        """.trimIndent()
+    fun qUpdate(qName: String): Long {
+        val queryString = queries[qName]?.trimIndent() ?: return -1.0.toLong()
         val update = UpdateFactory.create(queryString)
         val dataset = DatasetFactory.create(ont)
         val updateProcessor = createUpdateExecution(update, dataset)
-        val startTime = System.currentTimeMillis()
-        updateProcessor.execute()
-        val endTime = System.currentTimeMillis()
-        return endTime - startTime
-    }
-
-
-    fun updateLevel1(): Long {
-        val queryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE WHERE {
-                ?area tsc:hasLevel ?oldLevel.
-            };
-            
-            INSERT {
-                ?area tsc:hasLevel ?level.
-            } WHERE {
-                ?city tsc:hasArea ?area.
-                ?area tsc:hasSquareMeter ?sqm.
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToMultiObservedProperty/sta:hasname "Visit";
-                    sta:pointToresult ?result
-                ].
-                
-                {
-                    SELECT ?area (MAX(?resultTime) AS ?latestTime)
-                    WHERE {
-                        ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                            sta:pointToMultiObservedProperty/sta:hasname "Visit";
-                            sta:pointToresult/sta:isresultByObservation/sta:hasresultTime ?resultTime
-                        ].
-                    }
-                    GROUP BY ?area
-                }
-                
-                ?result sta:isresultByObservation/sta:hasresultTime ?latestTime;
-                        sta:hasvalue ?count.
-            
-                BIND(xsd:decimal(?count) AS ?people)
-                BIND(?people / ?sqm AS ?peoplePerSqM)
-            
-                OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-                OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-                OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-                OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-                OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-                OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
-            }
-        """.trimIndent()
-    
-        val update = UpdateFactory.create(queryString)
-        val dataset = DatasetFactory.create(ont)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
 
         val startTime = System.currentTimeMillis()
         updateProcessor.execute()
         val endTime = System.currentTimeMillis()
+        
         return endTime - startTime
     }
-
     
-    fun selectTempMax0(): List<String> {
-        val queryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            SELECT ?areaName ?resultTime ?temperature
-            WHERE {
-                ?area tsc:hasName ?areaName .
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
-                ?observation sta:hasresultTime ?resultTime.
-                ?observation sta:hasresult [
-                    sta:hasObservedProperty ?obsProp;
-                    sta:hasvalue ?temperature
-                ].
-                ?obsProp sta:hasname "Air Temperature".
-            }
-            ORDER BY DESC(?temperature)
-            LIMIT 1        
-        """.trimIndent()
-        
-        // SPARQL 쿼리 생성
+    fun qSelectOne(qName: String): List<String> {
+        val queryString = queries[qName]?.trimIndent() ?: return emptyList()
+
         val query = QueryFactory.create(queryString)
-        
-        // 쿼리 실행
         val qexec = QueryExecutionFactory.create(query, ont)
+
         val startTime = System.currentTimeMillis()
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()
     
-        // 파싱
-        
         var resultList: List<String> = emptyList()
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
+            val areaName = qs.getLiteral("areaName").string
+            val resultTime = qs.getLiteral("resultTime").string
+            val temperature = qs.getLiteral("temperature").string
             resultList = listOf(
-                (endTime - startTime).toString(), // 소모시간
-                qs.getLiteral("areaName").string,
-                qs.getLiteral("resultTime").string,
-                qs.getLiteral("temperature").string
+                (endTime - startTime).toString(),
+                areaName,
+                resultTime,
+                temperature
             )
         }
 
-        qexec.close()
-        return resultList
-    }
-
-
-    fun selectTempMax1(): List<String> {
-        val queryString = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            SELECT ?areaName ?resultTime ?temperature
-            WHERE {
-                ?area tsc:hasName ?areaName .
-                ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                    sta:pointToresult ?resultResource;
-                    sta:pointToMultiObservedProperty/sta:hasname "Air Temperature"
-                ].
-                ?resultResource sta:hasvalue ?temperature;
-                                sta:isresultByObservation/sta:hasresultTime ?resultTime.
-            }
-            ORDER BY DESC(?temperature)
-            LIMIT 1            
-        """.trimIndent()
-        
-        // SPARQL 쿼리 생성
-        val query = QueryFactory.create(queryString)
-        
-        // 쿼리 실행
-        val qexec = QueryExecutionFactory.create(query, ont)
-        val startTime = System.currentTimeMillis()
-        val resultSet = qexec.execSelect()
-        val endTime = System.currentTimeMillis()
-    
-        // 파싱
-        var resultList: List<String> = emptyList()
-        if (resultSet.hasNext()) {
-            val qs = resultSet.nextSolution()
-            resultList = listOf(
-                (endTime - startTime).toString(), // 소모시간
-                qs.getLiteral("areaName").string,
-                qs.getLiteral("resultTime").string,
-                qs.getLiteral("temperature").string
-            )
-        }
-        
         qexec.close()
         return resultList
     }

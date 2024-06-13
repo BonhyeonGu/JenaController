@@ -107,7 +107,7 @@ class WebController : AutoCloseable {
         val vali = Validate(ont)
         //jenaValidate.validationTest_OWL("https://paper.9bon.org/ontologies/sensorthings/1.1")
         vali.validationTest_OWLandRDF()
-        model.addAttribute("message", "test")
+        model.addAttribute("message", "Finish : test")
         return "index"
     }
 
@@ -184,6 +184,15 @@ class WebController : AutoCloseable {
         }
     }
 
+    @GetMapping("/reloadQuery")
+    fun reloadQuery(model: Model): String {
+        logger.info("User Request /reloadQuery")
+        ontQ.reloadQuery()
+        model.addAttribute("message", "Finish : reloadQuery")
+        return "index"
+    }
+    
+
     @GetMapping("/queryForm")
     fun showQueryForm(): String {
         return "queryForm"
@@ -246,6 +255,7 @@ class WebController : AutoCloseable {
     }
 
 //=====================================================================================================
+    
     //Get Part of GML
     @GetMapping("/select/gml/{gmlID}", produces = ["application/xml"])
     @ResponseBody
@@ -313,79 +323,36 @@ class WebController : AutoCloseable {
 
 //=====================================================================================================
 
-    @GetMapping("/updateLevel0")
-    fun updateLevel0(model: Model): String {
-        logger.debug("User Request /updateLevel0")
-        val executionTime = ontQ.updateLevel0()
-
-        if (TRACE_TIME_SWITCH) {
-            testWrite("updateLevel0: $executionTime")
-        }
-
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-    
-
-    @GetMapping("/updateLevel1")
-    fun updateLevel1(model: Model): String {
-        logger.debug("User Request /updateLevel1")
-        val executionTime = ontQ.updateLevel1()
-
-        if (TRACE_TIME_SWITCH) {
-            testWrite("updateLevel1: $executionTime")
-        }
-
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-
-
-    @GetMapping("/selectTempMax0")
-    fun selectTempMax0(model: Model): String {
-        logger.debug("User Request /selectTempMax0")
-        val resultList = ontQ.selectTempMax0()
-        if (resultList.isNotEmpty()) {
-            
+    @GetMapping("/category/{qName}")
+    fun category(@PathVariable qName: String, model: Model): String {
+        logger.info("User Request /browse/$qName")
+        if (qName == "updateLevel0" || qName == "updateLevel1") {
+            val executionTime = ontQ.qUpdate(qName)
+            model.addAttribute("message", "Execution time: $executionTime ms")
             if (TRACE_TIME_SWITCH) {
-                testWrite("selectTempMax0: ${resultList[0]}")
+                testWrite("${qName}: ${executionTime}")
             }
-
+        }
+        else if (qName == "selectTempMax0" || qName == "selectTempMax1") {
+            val resultList = ontQ.qSelectOne(qName)
             model.addAttribute("message", """
                 Execution time: ${resultList[0]} ms<br><br>
                 Area Name : ${resultList[1]}<br>
                 Obs Time : ${resultList[2]}<br>
                 Temperature value : ${resultList[3]}
             """)
-        } else {
-            model.addAttribute("message", "No results found")
-        }
-        return "index"
-    }
-
-
-    @GetMapping("/selectTempMax1")
-    fun selectTempMax1(model: Model): String {
-        logger.debug("User Request /selectTempMax1")
-        val resultList = ontQ.selectTempMax1()
-        if (resultList.isNotEmpty()) {
-
+            model.addAttribute("message", "Execution time: ${resultList[0]} ms")
             if (TRACE_TIME_SWITCH) {
-                testWrite("selectTempMax1: ${resultList[0]}")
+                testWrite("${qName}: ${resultList[0]}")
             }
-
-            model.addAttribute("message", """
-                Execution time: ${resultList[0]} ms<br><br>
-                Area Name : ${resultList[1]}<br>
-                Obs Time : ${resultList[2]}<br>
-                Temperature value : ${resultList[3]}
-            """)
-        } else {
-            model.addAttribute("message", "No results found")
         }
+
+        else {
+            model.addAttribute("message", "Error Unknown Query Name")
+        }
+
         return "index"
     }
-
 
     @GetMapping("/debugUpdateVisitRand")
     fun debugUpdateVisitRand(model: Model): String {
