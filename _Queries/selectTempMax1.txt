@@ -5,12 +5,12 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT ?areaName ?resultTime ?temperature
 WHERE {
     ?area tsc:hasName ?areaName .
-    ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-        sta:pointToresult ?resultResource;
-        sta:pointToMultiObservedProperty/sta:hasname "Air Temperature"
-    ].
-    ?resultResource sta:hasvalue ?temperature;
-                    sta:isresultByObservation/sta:hasresultTime ?resultTime.
+    ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
+    ?indexpoint sta:pointToMultiObservedProperty ?obsProp .
+    ?obsProp sta:hasname "Air Temperature" .
+    ?indexpoint sta:pointToresult ?resultResource .
+    ?resultResource sta:hasvalue ?temperature ;
+                    sta:isresultByObservation/sta:hasresultTime ?resultTime .
 }
 ORDER BY DESC(?temperature)
-LIMIT 1        
+LIMIT 1

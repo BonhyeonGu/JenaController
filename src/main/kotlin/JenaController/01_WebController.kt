@@ -341,7 +341,6 @@ class WebController : AutoCloseable {
                 Obs Time : ${resultList[2]}<br>
                 Temperature value : ${resultList[3]}
             """)
-            model.addAttribute("message", "Execution time: ${resultList[0]} ms")
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${resultList[0]}")
             }
