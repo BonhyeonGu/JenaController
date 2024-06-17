@@ -331,6 +331,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     // Debug
 
     fun debugUpdateVisitRand(): Long {
+        logger.info("Q:debugUpdateVisitRand")
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
     
         // Step 1: Fetch all Observations
@@ -376,11 +377,13 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             logger.debug("Failed to update random people count: $e")
         }
         val endTime = System.currentTimeMillis()
+        logger.info("END")
         return endTime - startTime
     }
 
 
     fun debugUpdateTempRand(): Long {
+        logger.info("Q:debugUpdateTempRand")
         val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
     
         // Step 1: Fetch all Observations
@@ -426,6 +429,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             logger.debug("Failed to update random people count: $e")
         }
         val endTime = System.currentTimeMillis()
+        logger.info("END")
         return endTime - startTime
     }
 
