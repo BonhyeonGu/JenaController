@@ -31,7 +31,7 @@ dependencies {
 	implementation("ch.qos.logback:logback-core:1.4.9")
 
 	// Jena
-    implementation("org.apache.jena", "apache-jena-libs", "4.9.0")
+    implementation("org.apache.jena", "apache-jena-libs", "5.0.0")
 
 	// JSON Read
 	implementation("org.json:json:20211205")

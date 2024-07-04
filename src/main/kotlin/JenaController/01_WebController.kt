@@ -325,7 +325,7 @@ class WebController : AutoCloseable {
 
     @GetMapping("/category/{qName}")
     fun category(@PathVariable qName: String, model: Model): String {
-        logger.info("User Request /browse/$qName")
+        logger.info("User Request /category/$qName")
         if (qName == "updateLevel0" || qName == "updateLevel1") {
             val executionTime = ontQ.qUpdate(qName)
             model.addAttribute("message", "Execution time: $executionTime ms")
@@ -340,6 +340,20 @@ class WebController : AutoCloseable {
                 Area Name : ${resultList[1]}<br>
                 Obs Time : ${resultList[2]}<br>
                 Temperature value : ${resultList[3]}
+            """)
+            if (TRACE_TIME_SWITCH) {
+                testWrite("${qName}: ${resultList[0]}")
+            }
+        }
+
+        else if (qName == "selectTempAvgMax0" || qName == "selectTempAvgMax1") {
+            val resultList = ontQ.qSelectOne(qName)
+            model.addAttribute("message", """
+                Execution time: ${resultList[0]} ms<br><br>
+                Area Name : ${resultList[1]}<br>
+                Latest Result Time : ${resultList[2]}<br>
+                Latest PM100 : ${resultList[3]}<br>
+                Everage PM100 : ${resultList[4]}<br>
             """)
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${resultList[0]}")
@@ -367,6 +381,20 @@ class WebController : AutoCloseable {
     }
 
 
+    @GetMapping("/debugUpdateFloatingPopulatioonRand")
+    fun debugUpdateFloatingPopulatioonRand(model: Model): String {
+        logger.debug("User Request /debugUpdateFloatingPopulatioonRand")
+        val executionTime = ontQ.debugUpdateFloatingPopulatioonRand()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("debugUpdateFloatingPopulatioonRand: $executionTime")
+        }
+
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
+
+
     @GetMapping("/debugUpdateTempRand")
     fun debugUpdateTempRand(model: Model): String {
         logger.debug("User Request /debugUpdateTempRand")
@@ -378,5 +406,19 @@ class WebController : AutoCloseable {
 
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
-    }   
+    }
+
+
+    @GetMapping("/debugUpdatePM100Rand")
+    fun debugUpdatePM10Rand(model: Model): String {
+        logger.debug("User Request /debugUpdatePM100Rand")
+        val executionTime = ontQ.debugUpdatePM100Rand()
+
+        if (TRACE_TIME_SWITCH) {
+            testWrite("debugUpdatePM100Rand: $executionTime")
+        }
+
+        model.addAttribute("message", "Execution time: $executionTime ms")
+        return "index"
+    }
 }
