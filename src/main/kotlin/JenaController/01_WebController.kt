@@ -367,58 +367,17 @@ class WebController : AutoCloseable {
         return "index"
     }
 
-    @GetMapping("/debugUpdateVisitRand")
-    fun debugUpdateVisitRand(model: Model): String {
-        logger.debug("User Request /debugUpdateVisitRand")
-        val executionTime = ontQ.debugUpdateVisitRand()
+    @GetMapping("/debugUpdate/{pName}")
+    fun debug(@PathVariable pName: String, model: Model): String {
+        logger.info("User Request /debugUpdate/${pName}")
+        val executionTime = ontQ.debugUpdateRand(pName)
 
         if (TRACE_TIME_SWITCH) {
-            testWrite("debugUpdateVisitRand: $executionTime")
+            testWrite("debug:${pName} ${executionTime}")
         }
 
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 
-
-    @GetMapping("/debugUpdateFloatingPopulatioonRand")
-    fun debugUpdateFloatingPopulatioonRand(model: Model): String {
-        logger.debug("User Request /debugUpdateFloatingPopulatioonRand")
-        val executionTime = ontQ.debugUpdateFloatingPopulatioonRand()
-
-        if (TRACE_TIME_SWITCH) {
-            testWrite("debugUpdateFloatingPopulatioonRand: $executionTime")
-        }
-
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-
-
-    @GetMapping("/debugUpdateTempRand")
-    fun debugUpdateTempRand(model: Model): String {
-        logger.debug("User Request /debugUpdateTempRand")
-        val executionTime = ontQ.debugUpdateTempRand()
-
-        if (TRACE_TIME_SWITCH) {
-            testWrite("debugUpdateTempRand: $executionTime")
-        }
-
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
-
-
-    @GetMapping("/debugUpdatePM100Rand")
-    fun debugUpdatePM10Rand(model: Model): String {
-        logger.debug("User Request /debugUpdatePM100Rand")
-        val executionTime = ontQ.debugUpdatePM100Rand()
-
-        if (TRACE_TIME_SWITCH) {
-            testWrite("debugUpdatePM100Rand: $executionTime")
-        }
-
-        model.addAttribute("message", "Execution time: $executionTime ms")
-        return "index"
-    }
 }

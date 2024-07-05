@@ -328,255 +328,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
 //=============================================================================================
 
-    // Debug
-
-    fun debugUpdateRand(pName: String): Long {
-        logger.info("Q:debugUpdateRand : " + pName)
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-        val observations = fetchObservations(dataset)
-        val peopleCounts = observations.map { generateRandom(pName) }
-        var valuesClause = ""
-        var propertyFullName = ""
-        when (pName) {
-            "Temp" -> {
-                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-                    "(<${obs.second}> \"$count\"^^xsd:double)"
-                }
-                propertyFullName = "Air Temperature"
-            }
-            "Visit" -> {
-                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-                    "(<${obs.second}> \"$count\"^^xsd:double)"
-                }
-            }
-            else -> "Default Value"
-    }
-
-
-    fun debugUpdateVisitRand(): Long {
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Visit".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        logger.info("END")
-        return endTime - startTime
-    }
-
-
-    fun debugUpdateFloatingPopulatioonRand(): Long {
-        logger.info("Q:debugUpdateFloatingPopulatioonRand")
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Observations
-        val observations = fetchObservations(dataset)
-    
-        // Step 2: Generate random people counts for each Observation
-        val peopleCounts = observations.map { generateRandomPeople() }
-    
-        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-            "(<${obs.second}> \"$count\"^^xsd:integer)"
-        }
-        
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Floating Populatioon".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        logger.info("END")
-        return endTime - startTime
-    }
-
-    fun debugUpdateTempRand(): Long {
-        logger.info("Q:debugUpdateTempRand")
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Observations
-        val observations = fetchObservations(dataset)
-    
-        // Step 2: Generate random people counts for each Observation
-        val peopleCounts = observations.map { generateRandomTemp() }
-    
-        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-            "(<${obs.second}> \"$count\"^^xsd:double)"
-        }
-        
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "Air Temperature".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        logger.info("END")
-        return endTime - startTime
-    }
-
-    
-    fun debugUpdatePM100Rand(): Long {
-        logger.info("Q:debugUpdatePM100Rand")
-        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-    
-        // Step 1: Fetch all Observations
-        val observations = fetchObservations(dataset)
-    
-        // Step 2: Generate random people counts for each Observation
-        val peopleCounts = observations.map { generateRandomPM100() }
-    
-        val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-            "(<${obs.second}> \"$count\"^^xsd:double)"
-        }
-        
-        val queryStringUpdate = """
-            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-            
-            DELETE {
-                ?result sta:hasvalue ?oldValue.
-            }
-            INSERT {
-                ?result sta:hasvalue ?newValue.
-            }
-            WHERE {
-                VALUES (?obs ?newValue) {
-                    $valuesClause
-                }
-                ?obs sta:hasresult ?result.
-                ?result sta:hasObservedProperty ?obsProp;
-                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname "PM 100".
-            }
-        """.trimIndent()
-    
-    
-        val update = UpdateFactory.create(queryStringUpdate)
-        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
-        val startTime = System.currentTimeMillis()
-        try {
-            updateProcessor.execute()
-            logger.debug("Random people count updated successfully")
-        } catch (e: Exception) {
-            logger.debug("Failed to update random people count: $e")
-        }
-        val endTime = System.currentTimeMillis()
-        logger.info("END")
-        return endTime - startTime
-    }
-
-
-    fun generateRandom(aName: String): String {
-        logger.info("Q:debugUpdateRand")
-        var ret = ""
-        when (aName) {
-            "Temp" -> {
-                val range = -10.0..25.0
-                val randomValue = Random.nextDouble(range.start, range.endInclusive)
-                ret = String.format("%.2f", randomValue)
-            }
-            "PM100", "Humidity" -> {
-                val range = 10.0..60.0
-                val randomValue = Random.nextDouble(range.start, range.endInclusive)
-                ret = String.format("%.2f", randomValue)
-            }
-            "People" -> {
-                val ranges = listOf(
-                    1..4999,    // Level A
-                    5000..6999, // Level B
-                    7000..10799, // Level C
-                    10800..13899, // Level D
-                    13900..19999, // Level E
-                    20000..30000  // Level F, 최대값은 예시로 30000을 설정
-                )
-                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
-                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
-            }
-        }
-        return ret
-    }
-    
+    // Debug Tools
 
     fun countArea(dataset: Dataset): List<String> {
         val fetchAreasQueryString = """
@@ -638,8 +390,124 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
 
-//=============================================================================================
+    fun generateRandom(pName: String): String {
+        //logger.info("generateRandom")
+        var ret = ""
+        when (pName) {
+            "temp" -> {
+                val range = -10.0..25.0
+                val randomValue = Random.nextDouble(range.start, range.endInclusive)
+                ret = String.format("%.2f", randomValue)
+            }
+            "pm10" -> {
+                val range = 5.0..60.0
+                val randomValue = Random.nextDouble(range.start, range.endInclusive)
+                ret = String.format("%.2f", randomValue)
+            }
+            "humidity" -> {
+                val range = 40.0..80.0
+                val randomValue = Random.nextDouble(range.start, range.endInclusive)
+                ret = String.format("%.2f", randomValue)
+            }
+            "tv", "visitor" -> {
+                val ranges = listOf(
+                    1..4999,    // Level A
+                    5000..6999, // Level B
+                    7000..10799, // Level C
+                    10800..13899, // Level D
+                    13900..19999, // Level E
+                    20000..30000  // Level F, 최대값은 예시로 30000을 설정
+                )
+                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
+                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+            }
+        }
+        return ret
+    }
 
+    // Debug UPDATE
+
+
+    fun debugUpdateRand(pName: String): Long {
+        logger.info("Q:debugUpdateRand : " + pName)
+        val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+        val observations = fetchObservations(dataset)
+        val peopleCounts = observations.map { generateRandom(pName) }
+        var valuesClause = ""
+        var propertyFullName = ""
+        when (pName) {
+            "temp" -> {
+                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                    "(<${obs.second}> \"$count\"^^xsd:double)"
+                }
+                propertyFullName = "air_temperature"
+            }
+            "humidity" -> {
+                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                    "(<${obs.second}> \"$count\"^^xsd:double)"
+                }
+                propertyFullName = "humidity"
+            }
+            "pm10" -> {
+                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                    "(<${obs.second}> \"$count\"^^xsd:double)"
+                }
+                propertyFullName = "pm10"
+            }
+            "tv" -> {
+                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                    "(<${obs.second}> \"$count\"^^xsd:integer)"
+                }
+                propertyFullName = "traffic_volume"
+            }
+            "visitor" -> {
+                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                    "(<${obs.second}> \"$count\"^^xsd:integer)"
+                }
+                propertyFullName = "visitor"
+            }
+            else -> { logger.info("Q:debugUpdateRand !!! ERROR !!!")
+            }
+        }
+        val queryStringUpdate = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+            
+            DELETE {
+                ?result sta:hasvalue ?oldValue.
+            }
+            INSERT {
+                ?result sta:hasvalue ?newValue.
+            }   
+            WHERE {
+                VALUES (?obs ?newValue) {
+                    ${valuesClause}
+                }
+                ?obs sta:hasresult ?result.
+                ?result sta:hasObservedProperty ?obsProp;
+                        sta:hasvalue ?oldValue.
+                ?obsProp sta:hasname ${propertyFullName}.
+            }
+        """.trimIndent()
+
+        val update = UpdateFactory.create(queryStringUpdate)
+        val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+        val startTime = System.currentTimeMillis()
+        try {
+            updateProcessor.execute()
+            logger.info("Random Updated successfully")
+        } catch (e: Exception) {
+            logger.info("Failed to update random people count: $e")
+        }
+        val endTime = System.currentTimeMillis()
+        logger.info("END")
+        return endTime - startTime
+    }
+
+
+//=============================================================================================
+    
     // Know
 
     fun qUpdate(qName: String): Long {
@@ -699,4 +567,5 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         qexec.close()
         return resultList
     }
+
 }

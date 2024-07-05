@@ -7,7 +7,7 @@ WHERE {
     ?area tsc:hasName ?areaName .
     ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
     ?indexpoint sta:pointToMultiObservedProperty ?obsProp .
-    ?obsProp sta:hasname "Air Temperature" .
+    ?obsProp sta:hasname "air_temperature" .
     ?indexpoint sta:pointToresult ?resultResource .
     ?resultResource sta:hasvalue ?temperature ;
                     sta:isresultByObservation/sta:hasresultTime ?resultTime .

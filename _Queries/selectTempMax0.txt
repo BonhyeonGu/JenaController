@@ -11,7 +11,7 @@ WHERE {
         sta:hasObservedProperty ?obsProp;
         sta:hasvalue ?temperature
     ].
-    ?obsProp sta:hasname "Air Temperature".
+    ?obsProp sta:hasname "air_temperature".
 }
 ORDER BY DESC(?temperature)
 LIMIT 1
