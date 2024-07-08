@@ -487,7 +487,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 ?obs sta:hasresult ?result.
                 ?result sta:hasObservedProperty ?obsProp;
                         sta:hasvalue ?oldValue.
-                ?obsProp sta:hasname ${propertyFullName}.
+                ?obsProp sta:hasname "${propertyFullName}"^^xsd:string.
             }
         """.trimIndent()
 
