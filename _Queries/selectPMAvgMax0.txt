@@ -5,16 +5,16 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT ?areaName ?latestPM ?latestResultTime ?avgPM
 WHERE {
     {
-        SELECT ?areaName (AVG(?PM) AS ?avgPM)
+        SELECT ?areaName (AVG(?pm) AS ?avgPM)
         WHERE {
             ?area tsc:hasName ?areaName .
             ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation .
             ?observation sta:hasresultTime ?resultTime .
             ?observation sta:hasresult [
                 sta:hasObservedProperty ?obsProp;
-                sta:hasvalue ?PM
+                sta:hasvalue ?pm
             ] .
-            ?obsProp sta:hasname "PM 100" .
+            ?obsProp sta:hasname "pm_100"^^xsd:string.
         }
         GROUP BY ?areaName
         ORDER BY DESC(?avgPM)
@@ -27,7 +27,7 @@ WHERE {
         sta:hasObservedProperty ?latestObsProp;
         sta:hasvalue ?latestPM
     ] .
-    ?latestObsProp sta:hasname "PM 100" .
+    ?latestObsProp sta:hasname "pm_100"^^xsd:string.
 }
 ORDER BY DESC(?latestResultTime)
 LIMIT 1

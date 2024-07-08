@@ -12,7 +12,7 @@ INSERT {
     ?city tsc:hasArea ?area.
     ?area tsc:hasSquareMeter ?sqm.
     ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-        sta:pointToMultiObservedProperty/sta:hasname "Visit";
+        sta:pointToMultiObservedProperty/sta:hasname "visitor";
         sta:pointToresult ?result
     ].
     
@@ -20,7 +20,7 @@ INSERT {
         SELECT ?area (MAX(?resultTime) AS ?latestTime)
         WHERE {
             ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint [
-                sta:pointToMultiObservedProperty/sta:hasname "Visit";
+                sta:pointToMultiObservedProperty/sta:hasname "visitor";
                 sta:pointToresult/sta:isresultByObservation/sta:hasresultTime ?resultTime
             ].
         }

@@ -20,7 +20,7 @@ INSERT {
                             sta:hasObservedProperty ?obsProp;
                             sta:hasvalue ?count
                         ].
-            ?obsProp sta:hasname "Visit".
+            ?obsProp sta:hasname "visitor".
         }
         GROUP BY ?area
     }
@@ -30,7 +30,7 @@ INSERT {
                         sta:hasObservedProperty ?obsProp;
                         sta:hasvalue ?count
                     ].
-    ?obsProp sta:hasname "Visit".
+    ?obsProp sta:hasname "visitor".
 
     BIND(xsd:decimal(?count) AS ?people)
     BIND(?people / ?sqm AS ?peoplePerSqM)
