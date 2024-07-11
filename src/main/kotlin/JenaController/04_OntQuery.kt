@@ -394,7 +394,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         //logger.info("generateRandom")
         var ret = ""
         when (pName) {
-            "temp" -> {
+            "air_temperature" -> {
                 val range = -10.0..25.0
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
@@ -409,7 +409,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
             }
-            "tv", "visitor" -> {
+            "traffic_volume", "visitor" -> {
                 val ranges = listOf(
                     1..4999,    // Level A
                     5000..6999, // Level B
@@ -436,7 +436,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         var valuesClause = ""
         var propertyFullName = ""
         when (pName) {
-            "temp" -> {
+            "air_temperature" -> {
                 valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                     "(<${obs.second}> \"$count\"^^xsd:double)"
                 }
@@ -454,7 +454,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 }
                 propertyFullName = "pm10"
             }
-            "tv" -> {
+            "traffic_volume" -> {
                 valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                     "(<${obs.second}> \"$count\"^^xsd:integer)"
                 }
