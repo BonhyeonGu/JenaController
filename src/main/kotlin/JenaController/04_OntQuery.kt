@@ -399,8 +399,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
             }
-            "pm10" -> {
-                val range = 5.0..60.0
+            "pm10", "pm25" -> {
+                val range = 10.0..80.0
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
             }
@@ -409,7 +409,32 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
             }
-            "traffic_volume", "visitor" -> {
+            "voc" -> {
+                val ranges = listOf(
+                    0.001..1.00, // Formaldehyde safe
+                    10.0..20.0, // 도시평범한밤
+                    10000..100000, // 맑은날
+                    1000..20000  // 흐린날
+                )
+                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
+                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+            }
+            "noise" -> {
+                val range = 0.0..120.0
+                val randomValue = Random.nextDouble(range.start, range.endInclusive)
+                ret = String.format("%.2f", randomValue)
+            }
+            "iluminance" -> {
+                val ranges = listOf(
+                    0.001..1.00,    // 어두운밤
+                    10.0..20.0, // 도시평범한밤
+                    10000..100000, // 맑은날
+                    1000..20000  // 흐린날
+                )
+                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
+                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+            }
+            "traffic_volume", "visitor", "revisitor" -> {
                 val ranges = listOf(
                     1..4999,    // Level A
                     5000..6999, // Level B
@@ -421,6 +446,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
                 ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
             }
+            
         }
         return ret
     }
@@ -523,6 +549,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         
         return endTime - startTime
     }
+    
     
     fun qSelectOne(qName: String): List<String> {
         val queryString = queries[qName]?.trimIndent() ?: return emptyList()
