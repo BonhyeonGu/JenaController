@@ -411,13 +411,13 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             }
             "voc" -> {
                 val ranges = listOf(
-                    0.001..1.00, // Formaldehyde safe
-                    10.0..20.0, // 도시평범한밤
-                    10000..100000, // 맑은날
-                    1000..20000  // 흐린날
+                    0.001..0.002, // Formaldehyde safe
+                    0.003..0.75, // Formaldehyde warring
+                    0.75..0.8 // Formaldehyde danger
                 )
-                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
-                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+                val selectedRange = ranges.random()
+                val randomValue = Random.nextDouble(selectedRange.start, selectedRange.endInclusive)    
+                ret = String.format("%.3f", randomValue)
             }
             "noise" -> {
                 val range = 0.0..120.0
@@ -428,11 +428,12 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val ranges = listOf(
                     0.001..1.00,    // 어두운밤
                     10.0..20.0, // 도시평범한밤
-                    10000..100000, // 맑은날
-                    1000..20000  // 흐린날
+                    10000.0..100000.0, // 맑은날
+                    1000.0..20000.0  // 흐린날
                 )
-                val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
-                ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
+                val selectedRange = ranges.random()
+                val randomValue = Random.nextDouble(selectedRange.start, selectedRange.endInclusive)    
+                ret = String.format("%.3f", randomValue)
             }
             "traffic_volume", "visitor", "revisitor" -> {
                 val ranges = listOf(
@@ -462,36 +463,20 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         var valuesClause = ""
         var propertyFullName = ""
         when (pName) {
-            "air_temperature" -> {
+            "air_temperature", "humidity", "pm10", "pm25", "humidity", "voc", "noise", "iluminance"  -> {
                 valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                     "(<${obs.second}> \"$count\"^^xsd:double)"
                 }
-                propertyFullName = "air_temperature"
+                propertyFullName = pName
             }
-            "humidity" -> {
-                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-                    "(<${obs.second}> \"$count\"^^xsd:double)"
-                }
-                propertyFullName = "humidity"
-            }
-            "pm10" -> {
-                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-                    "(<${obs.second}> \"$count\"^^xsd:double)"
-                }
-                propertyFullName = "pm10"
-            }
-            "traffic_volume" -> {
+
+            "traffic_volume", "visitor", "revisitor" -> {
                 valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                     "(<${obs.second}> \"$count\"^^xsd:integer)"
                 }
-                propertyFullName = "traffic_volume"
+                propertyFullName = pName
             }
-            "visitor" -> {
-                valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
-                    "(<${obs.second}> \"$count\"^^xsd:integer)"
-                }
-                propertyFullName = "visitor"
-            }
+            
             else -> { logger.info("Q:debugUpdateRand !!! ERROR !!!")
             }
         }
