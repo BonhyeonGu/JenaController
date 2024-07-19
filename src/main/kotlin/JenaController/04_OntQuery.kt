@@ -463,7 +463,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         var valuesClause = ""
         var propertyFullName = ""
         when (pName) {
-            "air_temperature", "humidity", "pm10", "pm25", "humidity", "voc", "noise", "iluminance"  -> {
+            "air_temperature", "pm10", "pm25", "humidity", "voc", "noise", "iluminance"  -> {
                 valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                     "(<${obs.second}> \"$count\"^^xsd:double)"
                 }
@@ -476,7 +476,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 }
                 propertyFullName = pName
             }
-            
+
             else -> { logger.info("Q:debugUpdateRand !!! ERROR !!!")
             }
         }
