@@ -171,6 +171,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     
         val resultsList = mutableListOf<Array<String>>()
         val results = qexec.execSelect()
+        logger.info(ResultSetFormatter.asText(results))
         
         // 쿼리의 결과에서 반환된 변수 이름 목록을 가져옵니다.
         val resultVars = results.resultVars
@@ -394,12 +395,12 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         //logger.info("generateRandom")
         var ret = ""
         when (pName) {
-            "air_temperature" -> {
+            "air_temperature", "temperature" -> {
                 val range = -10.0..25.0
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
             }
-            "pm10", "pm25" -> {
+            "pm10", "pm25", "dustLevel", "fineDustLevel", "veryFineDustLevel" -> {
                 val range = 10.0..80.0
                 val randomValue = Random.nextDouble(range.start, range.endInclusive)
                 ret = String.format("%.2f", randomValue)
@@ -437,12 +438,12 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             }
             "traffic_volume", "visitor", "revisitor" -> {
                 val ranges = listOf(
-                    1..4999,    // Level A
-                    5000..6999, // Level B
-                    7000..10799, // Level C
-                    10800..13899, // Level D
-                    13900..19999, // Level E
-                    20000..30000  // Level F, 최대값은 예시로 30000을 설정
+                    0..3077,    // Level A
+                    3077..4310, // Level B
+                    4310..7194, // Level C
+                    7194..10753, // Level D
+                    10753..21739, // Level E
+                    21739..30000  // Level F, 최대값은 예시로 30000을 설정
                 )
                 val selectedRange = ranges.random()  // 리스트에서 무작위로 하나의 범위 선택
                 ret = (selectedRange.random()).toString()  // 선택된 범위 내에서 무작위로 숫자 선택
@@ -517,6 +518,54 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
 
+    fun TESTdebugUpdateRand(): {
+        val propNames = listOf("temperature", "humidity", "dustLevel", "fineDustLevel", "veryFineDustLevel")
+        for (pName in propNames) {
+            logger.info("Q:TESTdebugUpdateRand : " + pName)
+            val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
+            val observations = fetchObservations(dataset)
+            val peopleCounts = observations.map { generateRandom(pName) }
+            val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
+                "(<${obs.second}> \"$count\"^^xsd:double)"
+            }
+
+            val queryStringUpdate = """
+                PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+                PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                
+                DELETE {
+                    ?result sta:hasvalue ?oldValue.
+                }
+                INSERT {
+                    ?result sta:hasvalue ?newValue.
+                }   
+                WHERE {
+                    VALUES (?obs ?newValue) {
+                        ${valuesClause}
+                    }
+                    ?obs sta:hasresult ?result.
+                    ?result sta:hasObservedProperty ?obsProp;
+                            sta:hasvalue ?oldValue.
+                    ?obsProp sta:hasname "${pName}"^^xsd:string.
+                }
+            """.trimIndent()
+
+            val update = UpdateFactory.create(queryStringUpdate)
+            val updateProcessor = UpdateExecutionFactory.create(update, dataset)
+            val startTime = System.currentTimeMillis()
+            try {
+                updateProcessor.execute()
+                logger.info("Random Updated successfully")
+            } catch (e: Exception) {
+                logger.info("Failed to update random people count: $e")
+            }
+            val endTime = System.currentTimeMillis()
+            logger.info("End: ${endTime-startTime}")
+        }
+        return
+    }
+
 //=============================================================================================
     
     // Know
@@ -560,10 +609,24 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                     temperature
                 )
             }
-            else if (qName == "selectTempAvgMax0" || qName == "selectTempAvgMax1") {
+            else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
                 val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
                 val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
-                val latestTemperature = qs.getLiteral("latestTemperature")?.string ?: "Unknown"
+                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
+                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
+
+                resultList = listOf(
+                    (endTime - startTime).toString(),
+                    areaName,
+                    latestResultTime,
+                    latestTemperature,
+                    avgPM
+                )
+            }
+            else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
+                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
+                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
+                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
                 val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
 
                 resultList = listOf(

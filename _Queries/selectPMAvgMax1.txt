@@ -2,17 +2,17 @@ PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
 PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?areaName ?latestResultTime ?latestTemperature ?avgPM
+SELECT ?areaName ?latestResultTime ?latestPM ?avgPM
 WHERE {
     {
-        SELECT ?areaName (AVG(?temperature) AS ?avgPM)
+        SELECT ?areaName (AVG(?pm) AS ?avgPM)
         WHERE {
             ?area tsc:hasName ?areaName .
             ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
             ?indexpoint sta:pointToMultiObservedProperty ?obsProp .
-            ?obsProp sta:hasname "Air Temperature" .
+            ?obsProp sta:hasname "pm10"^^xsd:string.
             ?indexpoint sta:pointToresult ?resultResource .
-            ?resultResource sta:hasvalue ?temperature .
+            ?resultResource sta:hasvalue ?pm .
         }
         GROUP BY ?areaName
         ORDER BY DESC(?avgPM)
@@ -22,9 +22,9 @@ WHERE {
     ?area tsc:hasName ?areaName .
     ?area tsc:hasThing/sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
     ?indexpoint sta:pointToMultiObservedProperty ?latestObsProp .
-    ?latestObsProp sta:hasname "Air Temperature" .
+    ?latestObsProp sta:hasname "pm10"^^xsd:string.
     ?indexpoint sta:pointToresult ?latestResultResource .
-    ?latestResultResource sta:hasvalue ?latestTemperature ;
+    ?latestResultResource sta:hasvalue ?latestPM ;
                         sta:isresultByObservation/sta:hasresultTime ?latestResultTime .
 }
 ORDER BY DESC(?latestResultTime)

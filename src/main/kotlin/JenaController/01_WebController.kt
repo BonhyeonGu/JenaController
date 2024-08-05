@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody // 문자열을 렌더링 없이 간단한 방법으로 출력
+
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController // JSON&XML
 //--------------------------------------------------------------------
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryExecutionFactory
@@ -326,7 +329,7 @@ class WebController : AutoCloseable {
     @GetMapping("/category/{qName}")
     fun category(@PathVariable qName: String, model: Model): String {
         logger.info("User Request /category/$qName")
-        if (qName == "updateLevel0" || qName == "updateLevel1") {
+        if (qName == "updateLevel0" || qName == "updateLevel1" || qName == "addPro" || qName == "test") {
             val executionTime = ontQ.qUpdate(qName)
             model.addAttribute("message", "Execution time: $executionTime ms")
             if (TRACE_TIME_SWITCH) {
@@ -346,7 +349,7 @@ class WebController : AutoCloseable {
             }
         }
 
-        else if (qName == "selectTempAvgMax0" || qName == "selectTempAvgMax1") {
+        else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
             val resultList = ontQ.qSelectOne(qName)
             model.addAttribute("message", """
                 Execution time: ${resultList[0]} ms<br><br>
@@ -354,6 +357,19 @@ class WebController : AutoCloseable {
                 Latest Result Time : ${resultList[2]}<br>
                 Latest PM100 : ${resultList[3]}<br>
                 Everage PM100 : ${resultList[4]}<br>
+            """)
+            if (TRACE_TIME_SWITCH) {
+                testWrite("${qName}: ${resultList[0]}")
+            }
+        }
+
+        else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
+            val resultList = ontQ.qSelectOne(qName)
+            model.addAttribute("message", """
+                Execution time: ${resultList[0]} ms<br><br>
+                Area Name : ${resultList[1]}<br>
+                Everage Traffic : ${resultList[2]}<br>
+                Everage Iluminance : ${resultList[3]}<br>
             """)
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${resultList[0]}")
@@ -379,5 +395,26 @@ class WebController : AutoCloseable {
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
+
+//=====================================================================================================
+
+    @GetMapping("/TESTdebugUpdate")
+    fun TESTdebug(model: Model): String {
+        logger.info("User Request /TESTdebugUpdate")
+        ontQ.TESTdebugUpdateRand()
+        return "index"
+    }
+
+    @GetMapping("/TESTcategory/{q0}/{q1}/{q2}")
+    fun TESTcategory(@PathVariable q0: String, @PathVariable q1: String, @PathVariable q2: String): Map<String, Any> {
+        logger.info("User Request /TESTcategory/$q0/$q1/$q2")
+        val res = ontQ.TESTqSelectOne(q0, q1, q2)
+        return mapOf(
+            "id" to res
+        )
+    }
+
+//=====================================================================================================
+
 
 }

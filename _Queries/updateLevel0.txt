@@ -20,7 +20,7 @@ INSERT {
                             sta:hasObservedProperty ?obsProp;
                             sta:hasvalue ?count
                         ].
-            ?obsProp sta:hasname "visitor".
+            ?obsProp sta:hasname "traffic_volume".
         }
         GROUP BY ?area
     }
@@ -30,15 +30,15 @@ INSERT {
                         sta:hasObservedProperty ?obsProp;
                         sta:hasvalue ?count
                     ].
-    ?obsProp sta:hasname "visitor".
+    ?obsProp sta:hasname "traffic_volume".
 
     BIND(xsd:decimal(?count) AS ?people)
     BIND(?people / ?sqm AS ?peoplePerSqM)
 
-    OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.5) }
-    OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.5 && ?peoplePerSqM <= 0.7) }
-    OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.7 && ?peoplePerSqM <= 1.08) }
-    OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 1.08 && ?peoplePerSqM <= 1.39) }
-    OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.39 && ?peoplePerSqM <= 2) }
-    OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2) }
+    OPTIONAL { ?level tsc:hasName "A" . FILTER(?peoplePerSqM <= 0.3077) }
+    OPTIONAL { ?level tsc:hasName "B" . FILTER(?peoplePerSqM > 0.3077 && ?peoplePerSqM <= 0.431) }
+    OPTIONAL { ?level tsc:hasName "C" . FILTER(?peoplePerSqM > 0.431 && ?peoplePerSqM <= 0.7194) }
+    OPTIONAL { ?level tsc:hasName "D" . FILTER(?peoplePerSqM > 0.7194 && ?peoplePerSqM <= 1.0753) }
+    OPTIONAL { ?level tsc:hasName "E" . FILTER(?peoplePerSqM > 1.0753 && ?peoplePerSqM <= 2.1739) }
+    OPTIONAL { ?level tsc:hasName "F" . FILTER(?peoplePerSqM > 2.1739) }
 }

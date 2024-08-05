@@ -14,7 +14,7 @@ WHERE {
                 sta:hasObservedProperty ?obsProp;
                 sta:hasvalue ?pm
             ] .
-            ?obsProp sta:hasname "pm_100"^^xsd:string.
+            ?obsProp sta:hasname "pm10"^^xsd:string.
         }
         GROUP BY ?areaName
         ORDER BY DESC(?avgPM)
@@ -27,7 +27,7 @@ WHERE {
         sta:hasObservedProperty ?latestObsProp;
         sta:hasvalue ?latestPM
     ] .
-    ?latestObsProp sta:hasname "pm_100"^^xsd:string.
+    ?latestObsProp sta:hasname "pm10"^^xsd:string.
 }
 ORDER BY DESC(?latestResultTime)
 LIMIT 1
