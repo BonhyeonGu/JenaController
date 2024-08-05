@@ -405,15 +405,16 @@ class WebController : AutoCloseable {
         return "index"
     }
 
-    @GetMapping("/TESTcategory/{q0}/{q1}/{q2}")
+    @GetMapping("/TESTcategory/{q0}/{q1}")
     fun TESTcategory(@PathVariable q0: String, @PathVariable q1: String, @PathVariable q2: String): Map<String, Any> {
-        logger.info("User Request /TESTcategory/$q0/$q1/$q2")
-        val res = ontQ.TESTqSelectOne(q0, q1, q2)
+        logger.info("User Request /TESTcategory/$q0/$q1")
+        val resultList = ontQ.TESTqSelectOne(q0, q1)
         return mapOf(
-            "id" to res
+            "et" to resultList[0],
+            "id" to resultList[1]
         )
     }
-
+ 
 //=====================================================================================================
 
 

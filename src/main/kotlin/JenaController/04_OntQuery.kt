@@ -390,6 +390,37 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return observations
     }
 
+    fun TESTfetchObservations(dataset: Dataset): List<Pair<String, String>> {
+        val fetchObservationsQueryString = """
+            PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+            PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+            
+            SELECT ?subject ?obs WHERE {
+                ?subject sta:hasThing ?thing.
+                ?thing sta:hasMultiDatastream/sta:hasObservation ?obs.
+            }
+        """.trimIndent()
+    
+        val query = QueryFactory.create(fetchObservationsQueryString)
+        val qexec = QueryExecutionFactory.create(query, dataset)
+    
+        val observations = mutableListOf<Pair<String, String>>()
+        try {
+            val results = qexec.execSelect()
+            while (results.hasNext()) {
+                val soln = results.nextSolution()
+                val subject = soln.getResource("subject").uri
+                val obs = soln.getResource("obs").uri
+                observations.add(subject to obs)
+            }
+        } catch (e: Exception) {
+            logger.debug("Failed to fetch observations: $e")
+        } finally {
+            qexec.close()
+        }
+        return observations
+    }
+
 
     fun generateRandom(pName: String): String {
         //logger.info("generateRandom")
@@ -518,12 +549,12 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
 
-    fun TESTdebugUpdateRand(): {
+    fun TESTdebugUpdateRand() {
         val propNames = listOf("temperature", "humidity", "dustLevel", "fineDustLevel", "veryFineDustLevel")
         for (pName in propNames) {
             logger.info("Q:TESTdebugUpdateRand : " + pName)
             val dataset = DatasetFactory.create(ont) // `ont` should be your ontology model
-            val observations = fetchObservations(dataset)
+            val observations = TESTfetchObservations(dataset)
             val peopleCounts = observations.map { generateRandom(pName) }
             val valuesClause = observations.zip(peopleCounts).joinToString("\n") { (obs, count) ->
                 "(<${obs.second}> \"$count\"^^xsd:double)"
@@ -643,4 +674,63 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return resultList
     }
 
+    
+    fun TESTqSelectOne(q0: String, q1: String): List<String> {
+        val queryString = queries[qName]?.trimIndent() ?: return emptyList()
+
+        val query = QueryFactory.create(queryString)
+        val qexec = QueryExecutionFactory.create(query, ont)
+
+        val startTime = System.currentTimeMillis()
+        val resultSet = qexec.execSelect()
+        val endTime = System.currentTimeMillis()
+    
+        var resultList: List<String> = emptyList()
+        if (resultSet.hasNext()) {
+            val qs = resultSet.nextSolution()
+            if (qName == "selectTempMax0" || qName == "selectTempMax1") {
+                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
+                val resultTime = qs.getLiteral("resultTime")?.string ?: "Unknown"
+                val temperature = qs.getLiteral("temperature")?.string ?: "Unknown"
+                resultList = listOf(
+                    (endTime - startTime).toString(),
+                    areaName,
+                    resultTime,
+                    temperature
+                )
+            }
+            else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
+                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
+                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
+                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
+                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
+
+                resultList = listOf(
+                    (endTime - startTime).toString(),
+                    areaName,
+                    latestResultTime,
+                    latestTemperature,
+                    avgPM
+                )
+            }
+            else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
+                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
+                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
+                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
+                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
+
+                resultList = listOf(
+                    (endTime - startTime).toString(),
+                    areaName,
+                    latestResultTime,
+                    latestTemperature,
+                    avgPM
+                )
+            }
+        }
+
+        qexec.close()
+        return resultList
+    }
+    
 }
