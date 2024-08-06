@@ -675,10 +675,18 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
     
-    fun TESTqSelectOne(q0: String, q1: String): List<String> {
-        val queryString = queries[qName]?.trimIndent() ?: return emptyList()
+    fun TESTqSelectOne(q0: String, q1: String, q2: String): List<String> {
+        val queryString = when (q0) {
+            "realtime" -> queries["_TEST_realTime"]?.trimIndent()
+            "all" -> queries["_TEST_all"]?.trimIndent()
+            else -> return emptyList()
+        } ?: return emptyList()
+    
+        val modifiedQueryString = queryString
+            .replace("{{SORT}}", q1)
+            .replace("{{PROP}}", q2)
 
-        val query = QueryFactory.create(queryString)
+        val query = QueryFactory.create(modifiedQueryString)
         val qexec = QueryExecutionFactory.create(query, ont)
 
         val startTime = System.currentTimeMillis()
@@ -688,45 +696,24 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         var resultList: List<String> = emptyList()
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
-            if (qName == "selectTempMax0" || qName == "selectTempMax1") {
-                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
-                val resultTime = qs.getLiteral("resultTime")?.string ?: "Unknown"
-                val temperature = qs.getLiteral("temperature")?.string ?: "Unknown"
-                resultList = listOf(
-                    (endTime - startTime).toString(),
-                    areaName,
-                    resultTime,
-                    temperature
-                )
+            val id = qs.getResource("a")?.uri ?: "Unknown"
+            val value = when (q0) {
+                "realtime" -> qs.getLiteral("aggregateValue")?.string ?: "Unknown"
+                "all" -> qs.getLiteral("averageValue")?.string ?: "Unknown"
+                else -> "?"
             }
-            else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
-                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
-                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
-                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
-                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
-
-                resultList = listOf(
-                    (endTime - startTime).toString(),
-                    areaName,
-                    latestResultTime,
-                    latestTemperature,
-                    avgPM
-                )
+            val resultTime = when (q0) {
+                "realtime" -> qs.getLiteral("latestResultTime")?.string ?: "Unknown"
+                "all" -> "?"
+                else -> "?"
             }
-            else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
-                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
-                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
-                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
-                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
-
-                resultList = listOf(
-                    (endTime - startTime).toString(),
-                    areaName,
-                    latestResultTime,
-                    latestTemperature,
-                    avgPM
-                )
-            }
+        
+            resultList = listOf(
+                (endTime - startTime).toString(),
+                id,
+                value,
+                resultTime
+            )
         }
 
         qexec.close()
