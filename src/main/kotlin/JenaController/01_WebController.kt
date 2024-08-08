@@ -349,8 +349,8 @@ class WebController : AutoCloseable {
                 "et" to resultList[0],
                 "area" to resultList[1],
                 "areaName" to resultList[2],
-                "value" to resultList[3],
-                "resultTime" to resultList[4]
+                "resultTime" to resultList[3],
+                "value" to resultList[4]
             )
         }
 
@@ -363,8 +363,8 @@ class WebController : AutoCloseable {
                 "et" to resultList[0],
                 "area" to resultList[1],
                 "areaName" to resultList[2],
-                "value" to resultList[3],
-                "resultTime" to resultList[4],
+                "latestResultTime" to resultList[3],
+                "value" to resultList[4],
                 "Average" to resultList[5]
             )
         }
