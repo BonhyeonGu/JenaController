@@ -327,40 +327,44 @@ class WebController : AutoCloseable {
 //=====================================================================================================
 
     @GetMapping("/category/{qName}")
-    fun category(@PathVariable qName: String, model: Model): String {
+    @ResponseBody
+    fun category(@PathVariable qName: String, model: Model): Map<String, Any> {
         logger.info("User Request /category/$qName")
         if (qName == "updateLevel0" || qName == "updateLevel1" || qName == "addPro" || qName == "test") {
             val executionTime = ontQ.qUpdate(qName)
-            model.addAttribute("message", "Execution time: $executionTime ms")
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${executionTime}")
             }
+            return mapOf(
+                "et" to executionTime
+            )
         }
+
         else if (qName == "selectTempMax0" || qName == "selectTempMax1") {
             val resultList = ontQ.qSelectOne(qName)
-            model.addAttribute("message", """
-                Execution time: ${resultList[0]} ms<br><br>
-                Area Name : ${resultList[1]}<br>
-                Obs Time : ${resultList[2]}<br>
-                Temperature value : ${resultList[3]}
-            """)
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${resultList[0]}")
             }
+            return mapOf(
+                "et" to resultList[0],
+                "areaName" to resultList[1],
+                "value" to resultList[2],
+                "resultTime" to resultList[3]
+            )
         }
 
         else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
             val resultList = ontQ.qSelectOne(qName)
-            model.addAttribute("message", """
-                Execution time: ${resultList[0]} ms<br><br>
-                Area Name : ${resultList[1]}<br>
-                Latest Result Time : ${resultList[2]}<br>
-                Latest PM100 : ${resultList[3]}<br>
-                Everage PM100 : ${resultList[4]}<br>
-            """)
             if (TRACE_TIME_SWITCH) {
                 testWrite("${qName}: ${resultList[0]}")
             }
+            return mapOf(
+                "et" to resultList[0],
+                "areaName" to resultList[1],
+                "value" to resultList[2],
+                "resultTime" to resultList[3],
+                "Average" to resultList[4]
+            )
         }
 
         else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
@@ -376,11 +380,22 @@ class WebController : AutoCloseable {
             }
         }
 
-        else {
-            model.addAttribute("message", "Error Unknown Query Name")
+        if (qName == "updateSelectLevel") {
+            val executionTime = ontQ.qUpdate(qName)
+            val resultList = ontQ.qSelectOne(qName)
+            model.addAttribute("message", "Execution time: $executionTime ms")
+            return mapOf(
+                "et" to resultList[0],
+                "areaName" to resultList[1],
+                "value" to resultList[2],
+                "resultTime" to resultList[3],
+                "Average" to resultList[4],
+            )
         }
 
-        return "index"
+        return mapOf(
+            "et" to "Error Unknown Query Name"
+        )
     }
 
     @GetMapping("/debugUpdate/{pName}")
@@ -412,7 +427,7 @@ class WebController : AutoCloseable {
         val resultList = ontQ.TESTqSelectOne(q0, q1, q2)
         return mapOf(
             "et" to resultList[0],
-            "url" to resultList[1],
+            "uri" to resultList[1],
             "value" to resultList[2],
             "resultTime" to resultList[3]
         )
