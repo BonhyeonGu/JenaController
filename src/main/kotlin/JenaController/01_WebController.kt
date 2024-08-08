@@ -347,9 +347,10 @@ class WebController : AutoCloseable {
             }
             return mapOf(
                 "et" to resultList[0],
-                "areaName" to resultList[1],
-                "value" to resultList[2],
-                "resultTime" to resultList[3]
+                "area" to resultList[1],
+                "areaName" to resultList[2],
+                "value" to resultList[3],
+                "resultTime" to resultList[4]
             )
         }
 
@@ -360,10 +361,11 @@ class WebController : AutoCloseable {
             }
             return mapOf(
                 "et" to resultList[0],
-                "areaName" to resultList[1],
-                "value" to resultList[2],
-                "resultTime" to resultList[3],
-                "Average" to resultList[4]
+                "area" to resultList[1],
+                "areaName" to resultList[2],
+                "value" to resultList[3],
+                "resultTime" to resultList[4],
+                "Average" to resultList[5]
             )
         }
 
@@ -381,16 +383,23 @@ class WebController : AutoCloseable {
         }
 
         if (qName == "updateSelectLevel") {
-            val executionTime = ontQ.qUpdate(qName)
-            val resultList = ontQ.qSelectOne(qName)
-            model.addAttribute("message", "Execution time: $executionTime ms")
-            return mapOf(
-                "et" to resultList[0],
-                "areaName" to resultList[1],
-                "value" to resultList[2],
-                "resultTime" to resultList[3],
-                "Average" to resultList[4],
-            )
+            ontQ.qUpdate("updateLevel0")
+            val resultList = ontQ.qSelectMany("selectLevel")
+            
+            val levelMap = mutableMapOf<String, MutableList<Map<String, String>>>()
+        
+            for (result in resultList) {
+                val level = result[1]
+                val areaInfo = mapOf(
+                    "area" to result[2],
+                    "areaName" to result[3]
+                )
+
+                levelMap.computeIfAbsent(level) { mutableListOf() }.add(areaInfo)
+            }
+
+            // levelMap을 JSON으로 반환
+            return levelMap
         }
 
         return mapOf(
@@ -399,7 +408,7 @@ class WebController : AutoCloseable {
     }
 
     @GetMapping("/debugUpdate/{pName}")
-    fun debug(@PathVariable pName: String, model: Model): String {
+    fun debugUpdate(@PathVariable pName: String, model: Model): String {
         logger.info("User Request /debugUpdate/${pName}")
         val executionTime = ontQ.debugUpdateRand(pName)
 

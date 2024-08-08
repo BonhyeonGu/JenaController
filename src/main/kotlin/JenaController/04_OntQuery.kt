@@ -630,17 +630,20 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         if (resultSet.hasNext()) {
             val qs = resultSet.nextSolution()
             if (qName == "selectTempMax0" || qName == "selectTempMax1") {
+                val area = qs.getResource("area")?.uri ?: "Unknown"
                 val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
                 val resultTime = qs.getLiteral("resultTime")?.string ?: "Unknown"
                 val temperature = qs.getLiteral("temperature")?.string ?: "Unknown"
                 resultList = listOf(
                     (endTime - startTime).toString(),
+                    area,
                     areaName,
                     resultTime,
                     temperature
                 )
             }
             else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
+                val area = qs.getResource("area")?.uri ?: "Unknown"
                 val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
                 val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
                 val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
@@ -648,6 +651,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
                 resultList = listOf(
                     (endTime - startTime).toString(),
+                    area,
                     areaName,
                     latestResultTime,
                     latestTemperature,
@@ -670,6 +674,43 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             }
         }
 
+        qexec.close()
+        return resultList
+    }
+
+
+    fun qSelectMany(qName: String): MutableList<List<String>>  {
+        val queryString = queries[qName]?.trimIndent() ?: return mutableListOf()
+    
+        val query = QueryFactory.create(queryString)
+        val qexec = QueryExecutionFactory.create(query, ont)
+    
+        val startTime = System.currentTimeMillis()
+        val resultSet = qexec.execSelect()
+        val endTime = System.currentTimeMillis()
+    
+        val executionTime = (endTime - startTime).toString()
+        val resultList: MutableList<List<String>> = mutableListOf()
+    
+        if (qName == "selectLevel") {
+            while (resultSet.hasNext()) {
+                val qs = resultSet.nextSolution()
+    
+                val level = qs.getResource("level")?.uri ?: "Unknown"
+                val area = qs.getResource("area")?.uri ?: "Unknown"
+                val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
+    
+                resultList.add(
+                    listOf(
+                        executionTime,
+                        level,
+                        area,
+                        areaName
+                    )
+                )
+            }
+        }
+    
         qexec.close()
         return resultList
     }
