@@ -33,6 +33,10 @@ import java.io.ByteArrayOutputStream // JSON 변환
 import java.io.File
 import java.io.FileWriter
 import java.io.BufferedWriter
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.attribute.PosixFilePermission
+import java.nio.file.attribute.PosixFilePermissions
 //--------------------------------------------------------------------
 
 
@@ -46,7 +50,8 @@ class WebController : AutoCloseable {
         val ontQ = OntQuery(ont, cache = false)
         //-----------------------------------------------------------------------------
         const val TRACE_TIME_SWITCH = true
-        val TRACE_FILE_NAME = "./" + "Test" + ".txt"
+        val TRACE_FILE_NAME = "./" + "Trace.txt"
+        val COMPLETE_FILE_NAME = "./" + "Complete.txt"
         //-----------------------------------------------------------------------------
     }
 
@@ -65,11 +70,25 @@ class WebController : AutoCloseable {
         }
     }
 
-    fun testWrite(message: String) {
+    fun traceWrite(message: String) {
         bufferedWriter?.let {
             it.write("$message\n")
             it.flush()
         }
+    }
+
+    fun setFilePerTo777(filePath: String) {
+        val path = Paths.get(filePath)
+        val permissions = PosixFilePermissions.fromString("rwxrwxrwx")
+        Files.setPosixFilePermissions(path, permissions)
+    }
+
+    fun copyAndClearTraceFile() {
+        val sFile = File(TRACE_FILE_NAME)
+        val dFile = File(COMPLETE_FILE_NAME)
+        sFile.copyTo(dFile, overwrite = true)
+        FileWriter(sFile, false).close()
+        setFilePerTo777(dFile.absolutePath)
     }
 
     override fun close() {
@@ -95,6 +114,8 @@ class WebController : AutoCloseable {
     
         return jsonObject.toString()
     }
+
+
 
     @GetMapping("/")
     fun index(model: Model): String {
@@ -222,13 +243,22 @@ class WebController : AutoCloseable {
         val executionTime = endTime - startTime
 
         if (TRACE_TIME_SWITCH) {
-            testWrite("save: $executionTime")
+            traceWrite("save: $executionTime")
         }
 
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
 //=====================================================================================================
+
+    @GetMapping("/traceComplite")
+    fun traceComplites(model: Model): String {
+        copyAndClearTraceFile()
+        model.addAttribute("message", "traceComplite")
+        return "index"
+    }
+
+//===========================================
 
     @GetMapping("/select/id/{bldgname}/{type}")
     @ResponseBody
@@ -333,7 +363,7 @@ class WebController : AutoCloseable {
         if (qName == "updateLevel0" || qName == "updateLevel1" || qName == "addPro" || qName == "test") {
             val executionTime = ontQ.qUpdate(qName)
             if (TRACE_TIME_SWITCH) {
-                testWrite("${qName}: ${executionTime}")
+                traceWrite("${qName}: ${executionTime}")
             }
             return mapOf(
                 "et" to executionTime
@@ -343,7 +373,7 @@ class WebController : AutoCloseable {
         else if (qName == "selectTempMax0" || qName == "selectTempMax1") {
             val resultList = ontQ.qSelectOne(qName)
             if (TRACE_TIME_SWITCH) {
-                testWrite("${qName}: ${resultList[0]}")
+                traceWrite("${qName}: ${resultList[0]}")
             }
             return mapOf(
                 "et" to resultList[0],
@@ -357,7 +387,7 @@ class WebController : AutoCloseable {
         else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
             val resultList = ontQ.qSelectOne(qName)
             if (TRACE_TIME_SWITCH) {
-                testWrite("${qName}: ${resultList[0]}")
+                traceWrite("${qName}: ${resultList[0]}")
             }
             return mapOf(
                 "et" to resultList[0],
@@ -378,7 +408,7 @@ class WebController : AutoCloseable {
                 Everage Iluminance : ${resultList[3]}<br>
             """)
             if (TRACE_TIME_SWITCH) {
-                testWrite("${qName}: ${resultList[0]}")
+                traceWrite("${qName}: ${resultList[0]}")
             }
         }
 
@@ -413,7 +443,7 @@ class WebController : AutoCloseable {
         val executionTime = ontQ.debugUpdateRand(pName)
 
         if (TRACE_TIME_SWITCH) {
-            testWrite("debug:${pName} ${executionTime}")
+            traceWrite("debug:${pName} ${executionTime}")
         }
 
         model.addAttribute("message", "Execution time: $executionTime ms")
