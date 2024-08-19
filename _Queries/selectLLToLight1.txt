@@ -16,27 +16,23 @@ WHERE {
     FILTER(?latitude >= 35.10 && ?latitude <= 35.11)
     FILTER(?longitude >= 128.95 && ?longitude <= 128.97)
 
-    # Get latest observations for traffic volume
-    OPTIONAL {
-        ?thing sta:hasMultiDatastream/sta:hasObservation ?observation.
-        ?observation sta:hasresultTime ?resultTime;
-                     sta:hasresult ?result.
-        ?result sta:hasObservedProperty ?obsProp;
-                sta:hasvalue ?value.
-        ?obsProp sta:hasname "traffic_volume".
-        BIND(xsd:decimal(?value) AS ?people)
-    }
+    # Get latest observations for traffic volume using Indexpoint
+    ?thing sta:hasMultiDatastream/sta:hasIndexpoint [
+        sta:pointToMultiObservedProperty/sta:hasname "traffic_volume";
+        sta:pointToresult ?resultTraffic
+    ].
+    ?resultTraffic sta:isresultByObservation/sta:hasresultTime ?resultTimeTraffic;
+                   sta:hasvalue ?peopleValue.
+    BIND(xsd:decimal(?peopleValue) AS ?people)
 
-    # Get latest observations for illuminance
-    OPTIONAL {
-        ?thing sta:hasMultiDatastream/sta:hasObservation ?observation.
-        ?observation sta:hasresultTime ?resultTime;
-                     sta:hasresult ?result.
-        ?result sta:hasObservedProperty ?obsProp;
-                sta:hasvalue ?value.
-        ?obsProp sta:hasname "iluminance".
-        BIND(xsd:decimal(?value) AS ?illuminanceValue)
-    }
+    # Get latest observations for illuminance using Indexpoint
+    ?thing sta:hasMultiDatastream/sta:hasIndexpoint [
+        sta:pointToMultiObservedProperty/sta:hasname "iluminance";
+        sta:pointToresult ?resultIlluminance
+    ].
+    ?resultIlluminance sta:isresultByObservation/sta:hasresultTime ?resultTimeIlluminance;
+                       sta:hasvalue ?illuminanceValueRaw.
+    BIND(xsd:decimal(?illuminanceValueRaw) AS ?illuminanceValue)
 
     # Get the name of the area
     ?area tsc:hasName ?areaName.

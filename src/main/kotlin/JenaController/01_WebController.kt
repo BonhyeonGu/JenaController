@@ -369,7 +369,6 @@ class WebController : AutoCloseable {
                 "et" to executionTime
             )
         }
-
         else if (qName == "selectTempMax0" || qName == "selectTempMax1") {
             val resultList = ontQ.qSelectOne(qName)
             if (TRACE_TIME_SWITCH) {
@@ -383,7 +382,6 @@ class WebController : AutoCloseable {
                 "value" to resultList[4]
             )
         }
-
         else if (qName == "selectPMAvgMax0" || qName == "selectPMAvgMax1") {
             val resultList = ontQ.qSelectOne(qName)
             if (TRACE_TIME_SWITCH) {
@@ -398,21 +396,20 @@ class WebController : AutoCloseable {
                 "Average" to resultList[5]
             )
         }
-
         else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
             val resultList = ontQ.qSelectOne(qName)
-            model.addAttribute("message", """
-                Execution time: ${resultList[0]} ms<br><br>
-                Area Name : ${resultList[1]}<br>
-                Everage Traffic : ${resultList[2]}<br>
-                Everage Iluminance : ${resultList[3]}<br>
-            """)
             if (TRACE_TIME_SWITCH) {
                 traceWrite("${qName}: ${resultList[0]}")
             }
+            return mapOf(
+                "et" to resultList[0],
+                "area" to resultList[1],
+                "areaName" to resultList[2],
+                "avgTraffic" to resultList[3],
+                "avgIlluminance" to resultList[4]
+            )
         }
-
-        if (qName == "updateSelectLevel") {
+        else if (qName == "updateSelectLevel") {
             ontQ.qUpdate("updateLevel0")
             val resultList = ontQ.qSelectMany("selectLevel")
             

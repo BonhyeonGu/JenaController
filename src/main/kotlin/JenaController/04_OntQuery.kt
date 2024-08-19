@@ -659,17 +659,17 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 )
             }
             else if (qName == "selectLLToLight0" || qName == "selectLLToLight1") {
+                val area = qs.getResource("area")?.uri ?: "Unknown"
                 val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
-                val latestResultTime = qs.getLiteral("latestResultTime")?.string ?: "Unknown"
-                val latestTemperature = qs.getLiteral("latestPM")?.string ?: "Unknown"
-                val avgPM = qs.getLiteral("avgPM")?.string ?: "Unknown"
+                val avgTraffic = qs.getLiteral("avgTraffic")?.string ?: "Unknown"
+                val avgIlluminance = qs.getLiteral("avgIlluminance")?.string ?: "Unknown"
 
                 resultList = listOf(
                     (endTime - startTime).toString(),
+                    area,
                     areaName,
-                    latestResultTime,
-                    latestTemperature,
-                    avgPM
+                    avgTraffic,
+                    avgIlluminance
                 )
             }
         }
