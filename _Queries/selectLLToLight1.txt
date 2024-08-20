@@ -2,11 +2,10 @@ PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
 PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?area ?areaName (AVG(COALESCE(?people, 0)) AS ?avgTraffic) (AVG(COALESCE(?illuminanceValue, 0)) AS ?avgIlluminance)
+SELECT ?area ?areaName ?avgTraffic ?avgIlluminance (?avgTraffic / ?avgIlluminance AS ?ratio)
 WHERE {
-    ?city tsc:hasArea ?area.
-    ?area tsc:hasThing ?thing.
-    ?thing sta:hasLocation/sta:haslocation/sta:hascoordinates ?coords.
+    ?area tsc:hasThing ?thing .
+    ?thing sta:hasLocation/sta:haslocation/sta:hascoordinates ?coords .
 
     # Extract latitude and longitude
     BIND(xsd:float(STRBEFORE(?coords, " ")) AS ?latitude)
@@ -16,27 +15,36 @@ WHERE {
     FILTER(?latitude >= 35.10 && ?latitude <= 35.11)
     FILTER(?longitude >= 128.95 && ?longitude <= 128.97)
 
-    # Get latest observations for traffic volume using Indexpoint
-    ?thing sta:hasMultiDatastream/sta:hasIndexpoint [
-        sta:pointToMultiObservedProperty/sta:hasname "traffic_volume";
-        sta:pointToresult ?resultTraffic
-    ].
-    ?resultTraffic sta:isresultByObservation/sta:hasresultTime ?resultTimeTraffic;
-                   sta:hasvalue ?peopleValue.
-    BIND(xsd:decimal(?peopleValue) AS ?people)
-
-    # Get latest observations for illuminance using Indexpoint
-    ?thing sta:hasMultiDatastream/sta:hasIndexpoint [
-        sta:pointToMultiObservedProperty/sta:hasname "iluminance";
-        sta:pointToresult ?resultIlluminance
-    ].
-    ?resultIlluminance sta:isresultByObservation/sta:hasresultTime ?resultTimeIlluminance;
-                       sta:hasvalue ?illuminanceValueRaw.
-    BIND(xsd:decimal(?illuminanceValueRaw) AS ?illuminanceValue)
+    # Subquery to calculate avgTraffic for each area
+    {
+        SELECT ?area (SUM(?people) / COUNT(?people) AS ?avgTraffic)
+        WHERE {
+            ?area tsc:hasThing ?thing .
+            ?thing sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
+            ?indexpoint sta:pointToMultiObservedProperty/sta:hasname "traffic_volume"^^xsd:string .
+            ?indexpoint sta:pointToresult ?resultResource .
+            ?resultResource sta:hasvalue ?peopleRaw .
+            BIND(xsd:decimal(?peopleRaw) AS ?people)
+        }
+        GROUP BY ?area
+    }
+    
+    # Subquery to calculate avgIlluminance for each area
+    OPTIONAL {
+        SELECT ?area (SUM(?illuminanceValue) / COUNT(?illuminanceValue) AS ?avgIlluminance)
+        WHERE {
+            ?area tsc:hasThing ?thing .
+            ?thing sta:hasMultiDatastream/sta:hasIndexpoint ?indexpoint .
+            ?indexpoint sta:pointToMultiObservedProperty/sta:hasname "iluminance"^^xsd:string .
+            ?indexpoint sta:pointToresult ?resultResource .
+            ?resultResource sta:hasvalue ?illuminanceValueRaw .
+            BIND(xsd:decimal(?illuminanceValueRaw) AS ?illuminanceValue)
+        }
+        GROUP BY ?area
+    }
 
     # Get the name of the area
     ?area tsc:hasName ?areaName.
 }
-GROUP BY ?area ?areaName
-ORDER BY DESC(?avgTraffic/?avgIlluminance)
+ORDER BY DESC(?ratio)
 LIMIT 1

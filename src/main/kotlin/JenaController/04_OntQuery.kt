@@ -663,13 +663,15 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val areaName = qs.getLiteral("areaName")?.string ?: "Unknown"
                 val avgTraffic = qs.getLiteral("avgTraffic")?.string ?: "Unknown"
                 val avgIlluminance = qs.getLiteral("avgIlluminance")?.string ?: "Unknown"
+                val ratio = qs.getLiteral("ratio")?.string ?: "Unknown"
 
                 resultList = listOf(
                     (endTime - startTime).toString(),
                     area,
                     areaName,
                     avgTraffic,
-                    avgIlluminance
+                    avgIlluminance,
+                    ratio
                 )
             }
         }

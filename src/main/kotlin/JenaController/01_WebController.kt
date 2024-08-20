@@ -406,7 +406,8 @@ class WebController : AutoCloseable {
                 "area" to resultList[1],
                 "areaName" to resultList[2],
                 "avgTraffic" to resultList[3],
-                "avgIlluminance" to resultList[4]
+                "avgIlluminance" to resultList[4],
+                "ratio" to resultList[5]
             )
         }
         else if (qName == "updateSelectLevel") {
