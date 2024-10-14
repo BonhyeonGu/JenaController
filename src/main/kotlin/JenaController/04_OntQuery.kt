@@ -712,6 +712,29 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 )
             }
         }
+
+        else if (qName == "selectRoomQ") {
+            while (resultSet.hasNext()) {
+                val qs = resultSet.nextSolution()
+
+                
+                val buildingPart = qs.getResource("buildingPart")?.uri ?: "Unknown" // 방의 URI
+                val buildingPartLabel = qs.getLiteral("buildingPartLabel")?.string ?: "Unknown"
+                val roomUri = qs.getResource("room")?.uri ?: "Unknown" // 방의 URI
+                val roomLabel = qs.getLiteral("roomLabel")?.string ?: "Unknown"
+                val qualityIndex = qs.getLiteral("Q")?.double ?: Double.NaN // 계산된 Q 값
+                resultList.add(
+                    listOf(
+                        executionTime,
+                        buildingPart,
+                        buildingPartLabel,
+                        roomUri,
+                        roomLabel,
+                        qualityIndex.toString()
+                    )
+                )
+            }
+        }
     
         qexec.close()
         return resultList

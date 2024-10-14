@@ -429,6 +429,25 @@ class WebController : AutoCloseable {
             // levelMap을 JSON으로 반환
             return levelMap
         }
+        else if (qName == "selectRoomQ") {
+            val resultList = ontQ.qSelectMany("selectRoomQ")
+            
+            val roomMap = mutableMapOf<String, Map<String, Any>>() // 방 정보와 Q 값을 저장할 맵
+        
+            for (result in resultList) {
+                val buildingPartUri = result[1]
+                val buildingPartLabel = result[2]
+                val roomUri = result[3]  // 방의 URI
+                val roomLabel = result[4]  // 방의 레이블
+                val qualityIndex = result[5].toDouble()  // 계산된 Q 값
+        
+                // 방 URI를 키로 하고, 레이블과 Q 값을 맵에 저장
+                roomMap[roomUri] = mapOf("buildingPartUri" to buildingPartUri, "buildingPartLabel" to buildingPartLabel, "roomLabel" to roomLabel, "qualityIndex" to qualityIndex)
+            }
+            
+            // roomMap을 JSON으로 변환
+            return roomMap
+        }
 
         return mapOf(
             "et" to "Error Unknown Query Name"
