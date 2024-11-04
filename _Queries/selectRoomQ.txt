@@ -2,11 +2,14 @@ PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bldg: <https://dataset-dl.liris.cnrs.fr/rdf-owl-urban-data-ontologies/Ontologies/CityGML/2.0/building#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
-SELECT ?buildingPart ?buildingPartLabel ?room ?roomLabel (SUM(?alpha * ?temp_penalty + ?beta * ?humidity_penalty) AS ?Q)
+SELECT ?buildingPart ?buildingPartLabel ?room ?roomLabel ?asGML (SUM(?alpha * ?temp_penalty + ?beta * ?humidity_penalty) AS ?Q)
 WHERE {
     ?room a bldg:Room ;
-          skos:altLabel ?roomLabel .
+          skos:altLabel ?roomLabel ;
+          bldg:Room.lod4MultiSurface/geo:asGML ?asGML .
+    
     ?buildingPart a bldg:BuildingPart ;
                   bldg:AbstractBuilding.interiorRoom ?room ;
                   skos:altLabel ?buildingPartLabel .
@@ -48,4 +51,4 @@ WHERE {
         BIND(IF(?obsPropName = "humidity", (?numericValue - ?desiredHumidity) * (?numericValue - ?desiredHumidity), 0) AS ?humidity_penalty)
     }
 }
-GROUP BY ?buildingPart ?buildingPartLabel ?room ?roomLabel
+GROUP BY ?buildingPart ?buildingPartLabel ?room ?roomLabel ?asGML

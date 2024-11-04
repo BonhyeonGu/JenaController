@@ -722,6 +722,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val buildingPartLabel = qs.getLiteral("buildingPartLabel")?.string ?: "Unknown"
                 val roomUri = qs.getResource("room")?.uri ?: "Unknown" // 방의 URI
                 val roomLabel = qs.getLiteral("roomLabel")?.string ?: "Unknown"
+                val roomGeo = qs.getLiteral("asGML")?.string ?: "Unknown"
                 val qualityIndex = qs.getLiteral("Q")?.double ?: Double.NaN // 계산된 Q 값
                 resultList.add(
                     listOf(
@@ -730,6 +731,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                         buildingPartLabel,
                         roomUri,
                         roomLabel,
+                        roomGeo,
                         qualityIndex.toString()
                     )
                 )

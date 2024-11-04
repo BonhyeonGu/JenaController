@@ -439,10 +439,11 @@ class WebController : AutoCloseable {
                 val buildingPartLabel = result[2]
                 val roomUri = result[3]  // 방의 URI
                 val roomLabel = result[4]  // 방의 레이블
-                val qualityIndex = result[5].toDouble()  // 계산된 Q 값
+                val roomGeo = result[5]  // 방의 레이블
+                val qualityIndex = result[6].toDouble()  // 계산된 Q 값
         
                 // 방 URI를 키로 하고, 레이블과 Q 값을 맵에 저장
-                roomMap[roomUri] = mapOf("buildingPartUri" to buildingPartUri, "buildingPartLabel" to buildingPartLabel, "roomLabel" to roomLabel, "qualityIndex" to qualityIndex)
+                roomMap[roomUri] = mapOf("buildingPartUri" to buildingPartUri, "buildingPartLabel" to buildingPartLabel, "roomLabel" to roomLabel, "roomGeo" to roomGeo, "qualityIndex" to qualityIndex)
             }
             
             // roomMap을 JSON으로 변환
