@@ -6,23 +6,25 @@ import org.slf4j.LoggerFactory
 //--------------------------------------------------------------------
 import java.io.File
 
-class UpdateTemplate(private val paths: List<String>) {
+class UpdateTemplate(private val dirs: List<String>) {
     private val fileContents: MutableList<String> = mutableListOf()
 
     init {
-        if (paths.isEmpty()) {
-            logger.warn("No file paths provided.")
+        if (dirs.isEmpty()) {
+            logger.warn("No directory paths provided.")
         }
     }
 
     fun ready() {
-        paths.forEach { path ->
-            val file = File(path)
-            if (file.exists() && file.isFile) {
-                fileContents.add(file.readText())
-                logger.info("File loaded: $path")
+        dirs.forEach { dirPath ->
+            val dir = File(dirPath)
+            if (dir.exists() && dir.isDirectory) {
+                dir.walkTopDown().filter { it.isFile && it.extension == "txt" }.forEach { file ->
+                    fileContents.add(file.readText())
+                    logger.info("File loaded: ${file.absolutePath}")
+                }
             } else {
-                logger.warn("File not found or invalid: $path")
+                logger.warn("Directory not found or invalid: $dirPath")
             }
         }
     }

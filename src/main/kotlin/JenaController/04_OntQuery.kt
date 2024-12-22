@@ -788,7 +788,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return resultList
     }
     
-
+/*
     // UPDATE SUB_Graph
     fun insertSubgraphIntoOntology(filePath: String) {
         logger.info("Starting to insert subgraph from: $filePath")
@@ -803,4 +803,5 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         
         logger.info("Subgraph from $filePath successfully inserted into the ontology.")
     }
+        */
 }

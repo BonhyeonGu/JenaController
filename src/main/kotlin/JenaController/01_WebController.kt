@@ -491,4 +491,13 @@ class WebController : AutoCloseable {
 //=====================================================================================================
 
 
+    @GetMapping("/UpdateTest")
+    fun UpdateTest(model: Model): String {
+        logger.info("User Request /UpdateTest")
+        ont.read("./_Update_form//subgraph_modified_test2")
+        return "index"
+    }
+
+
+
 }
