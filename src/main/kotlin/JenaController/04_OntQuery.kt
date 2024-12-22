@@ -788,4 +788,19 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return resultList
     }
     
+
+    // UPDATE SUB_Graph
+    fun insertSubgraphIntoOntology(filePath: String) {
+        logger.info("Starting to insert subgraph from: $filePath")
+
+        val dataset = DatasetFactory.create(ont)
+        // 서브그래프 파일 불러오기
+        val subgraphModel = ModelFactory.createDefaultModel()
+        FileManager.get().readModel(subgraphModel, filePath)
+        
+        // 서브그래프를 메인 온톨로지에 추가
+        dataset.defaultModel.add(subgraphModel)
+        
+        logger.info("Subgraph from $filePath successfully inserted into the ontology.")
+    }
 }

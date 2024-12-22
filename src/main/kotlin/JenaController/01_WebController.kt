@@ -215,7 +215,6 @@ class WebController : AutoCloseable {
         model.addAttribute("message", "Finish : reloadQuery")
         return "index"
     }
-    
 
     @GetMapping("/queryForm")
     fun showQueryForm(): String {
@@ -228,7 +227,6 @@ class WebController : AutoCloseable {
         model.addAttribute("results", resultsList)
         return "queryResults"
     }
-
 
     @GetMapping("/save")
     fun save(model: Model): String {
