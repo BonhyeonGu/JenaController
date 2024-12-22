@@ -494,7 +494,19 @@ class WebController : AutoCloseable {
     @GetMapping("/UpdateTest")
     fun UpdateTest(model: Model): String {
         logger.info("User Request /UpdateTest")
-        ont.read("./_Update_form//subgraph_modified_test2")
+        
+        // 시간 측정 시작
+        val startTime = System.currentTimeMillis()
+        
+        // RDF 파일 읽기
+        ont.read("./_Update_form/subgraph_modified_test2.rdf")
+        
+        // 시간 측정 종료
+        val endTime = System.currentTimeMillis()
+        
+        // 소요 시간 로깅
+        logger.info("ont.read completed in ${endTime - startTime} ms")
+        
         return "index"
     }
 
