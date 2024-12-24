@@ -499,7 +499,7 @@ class WebController : AutoCloseable {
         val startTime = System.currentTimeMillis()
         
         // RDF 파일 읽기
-        ont.read("./_Update_form/subgraph_modified_test2.rdf")
+        ont.read("./_Update_form/subgraph_modified_test3.rdf")
         
         // 시간 측정 종료
         val endTime = System.currentTimeMillis()
