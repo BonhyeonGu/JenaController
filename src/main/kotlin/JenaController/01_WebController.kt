@@ -495,13 +495,18 @@ class WebController : AutoCloseable {
     fun UpdateTest(model: Model): String {
         logger.info("User Request /UpdateTest")
         
-        val startTime = System.currentTimeMillis() // 시작 시간 측정
-        ont.read("./_Update_form//combined_subgraph.rdf")
-        val endTime = System.currentTimeMillis()   // 끝 시간 측정
-
-        val elapsedTime = endTime - startTime // 소요 시간 계산
-        logger.info("ont.read: ${elapsedTime}ms")
-
+        // 시간 측정 시작
+        val startTime = System.currentTimeMillis()
+        
+        // RDF 파일 읽기
+        ont.read("./_Update_form/subgraph_modified_test3.rdf")
+        
+        // 시간 측정 종료
+        val endTime = System.currentTimeMillis()
+        
+        // 소요 시간 로깅
+        logger.info("ont.read completed in ${endTime - startTime} ms")
+        
         return "index"
     }
 
