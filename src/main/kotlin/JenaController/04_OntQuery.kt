@@ -38,7 +38,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
-        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
+        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1.3#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
         val gitURI = "https://github.com/BonhyeonGu/STA_Plugin/"
@@ -64,67 +64,27 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         logger.info("")
     }
 
+
     fun enShort(inp: String): String {
-        var ret = ""
-        when {
-            inp.contains(staURI) -> {
-                val inpPart = inp.split(staURI)
-                ret = "sta-${inpPart[1]}"
-            }
-            inp.contains(udURI) -> {
-                val inpPart = inp.split(udURI)
-                ret = "ud-${inpPart[1]}"
-                if (ret.contains("#")) {
-                    val inpPart = ret.split("#")
-                    ret = "${inpPart[0]}+${inpPart[1]}"
-                }
-            }
-            inp.contains(scURI) -> {
-                val inpPart = inp.split(scURI)
-                ret = "tsc-${inpPart[1]}"
-            }
-            inp.contains(gitURI) -> {
-                val inpPart = inp.split(gitURI)
-                ret = "git-${inpPart[1]}"
-                if (ret.contains("#")) {
-                    val inpPart = ret.split("#")
-                    ret = "${inpPart[0]}+${inpPart[1]}"
-                }
-            }
+        return when {
+            inp.contains(staURI) -> inp.replace(staURI, "sta-").replace("/", "$$")
+            inp.contains(udURI) -> inp.replace(udURI, "ud-").replace("/", "$$").replace("#", "~~")
+            inp.contains(scURI) -> inp.replace(scURI, "tsc-").replace("/", "$$")
+            inp.contains(gitURI) -> inp.replace(gitURI, "git-").replace("/", "$$").replace("#", "~~")
+            else -> inp
         }
-        return ret
+    }
+    
+    fun deShort(inp: String): String {
+        return when {
+            inp.startsWith("sta-") -> inp.replace("sta-", staURI).replace("$$", "/")
+            inp.startsWith("ud-") -> inp.replace("ud-", udURI).replace("$$", "/").replace("~~", "#")
+            inp.startsWith("tsc-") -> inp.replace("tsc-", scURI).replace("$$", "/")
+            inp.startsWith("git-") -> inp.replace("git-", gitURI).replace("$$", "/").replace("~~", "#")
+            else -> inp
+        }
     }
 
-    fun deShort(inp: String): String {
-        var ret = ""
-        when {
-            inp.contains("sta-") -> {
-                val inpPart = inp.split("sta-")
-                ret = "${staURI}${inpPart[1]}"
-            }
-            inp.contains("ud-") -> {
-                val inpPart = inp.split("ud-")
-                ret = "${udURI}${inpPart[1]}"
-                if (ret.contains("+")) {
-                    val inpPart = ret.split("+")
-                    ret = "${inpPart[0]}#${inpPart[1]}"
-                }
-            }
-            inp.contains("tsc-") -> {  // 새로운 조건문 추가
-                val inpPart = inp.split("tsc-")
-                ret = "${scURI}${inpPart[1]}"
-            }
-            inp.contains("git-") -> {  // 새로운 조건문 추가
-                val inpPart = inp.split("git-")
-                ret = "${gitURI}${inpPart[1]}"
-                if (ret.contains("+")) {
-                    val inpPart = ret.split("+")
-                    ret = "${inpPart[0]}#${inpPart[1]}"
-                }
-            }
-        }
-        return ret
-    }
 
     fun createUpdateExecution(updateRequest: UpdateRequest, dataset: Dataset): UpdateProcessor {
         val context = Context()
