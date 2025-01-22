@@ -41,6 +41,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
+        val gitURI = "https://github.com/BonhyeonGu/STA_Plugin/"
         val LOCALE_JSON_QUERIES = "./_Queries"
     }
     
@@ -78,9 +79,17 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                     ret = "${inpPart[0]}+${inpPart[1]}"
                 }
             }
-            inp.contains(scURI) -> {  // 새로운 조건문 추가
+            inp.contains(scURI) -> {
                 val inpPart = inp.split(scURI)
                 ret = "tsc-${inpPart[1]}"
+            }
+            inp.contains(gitURI) -> {
+                val inpPart = inp.split(gitURI)
+                ret = "git-${inpPart[1]}"
+                if (ret.contains("#")) {
+                    val inpPart = ret.split("#")
+                    ret = "${inpPart[0]}+${inpPart[1]}"
+                }
             }
         }
         return ret
@@ -104,6 +113,14 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             inp.contains("tsc-") -> {  // 새로운 조건문 추가
                 val inpPart = inp.split("tsc-")
                 ret = "${scURI}${inpPart[1]}"
+            }
+            inp.contains("git-") -> {  // 새로운 조건문 추가
+                val inpPart = inp.split("git-")
+                ret = "${gitURI}${inpPart[1]}"
+                if (ret.contains("+")) {
+                    val inpPart = ret.split("+")
+                    ret = "${inpPart[0]}#${inpPart[1]}"
+                }
             }
         }
         return ret
