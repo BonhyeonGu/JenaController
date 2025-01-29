@@ -19,6 +19,7 @@ import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 import org.apache.jena.query.ResultSetFormatter
 import org.apache.jena.ontology.OntModelSpec // RULE
+import org.apache.jena.riot.RiotException // Exc
 //--------------------------------------------------------------------
 import JenaController.Ontology
 import JenaController.Validate
@@ -40,6 +41,7 @@ import java.nio.file.attribute.PosixFilePermissions
 //--------------------------------------------------------------------
 
 
+// ./gradlew bootRun 
 @Controller
 class WebController : AutoCloseable {
     companion object {
@@ -490,7 +492,6 @@ class WebController : AutoCloseable {
  
 //=====================================================================================================
 
-
     @GetMapping("/UpdateTest")
     fun UpdateTest(model: Model): String {
         logger.info("User Request /UpdateTest")
@@ -510,7 +511,102 @@ class WebController : AutoCloseable {
         return "index"
     }
 
+//=====================================================================================================
 
+    @GetMapping("/ReadyToUpdate")
+    @ResponseBody
+    fun ReadyToUpdate(model: Model): Map<String, Any> {
+        logger.info("User Request /ReadyToUpdate")
+        val pDir = "./_TUN_UpdateReady"
+        val directory = File(pDir)
+
+        if (directory.exists() && directory.isDirectory) {
+            val files = directory.listFiles()
+            val startTime = System.currentTimeMillis() // 시간 측정 시작
+            var successCount = 0
+            var failureCount = 0
+
+            files?.forEach { file ->
+                logger.info("Read RDF => ${pDir}/${file.name}")
+                try {
+                    ont.read(file.absolutePath)
+                    successCount++
+
+                    // 파일 삭제
+                    if (file.delete()) {
+                        logger.info("Successfully deleted: ${file.name}")
+                    } else {
+                        logger.warn("Failed to delete: ${file.name}")
+                    }
+                } catch (e: RiotException) {
+                    logger.error("RiotException => ${pDir}/${file.name}")
+                    failureCount++
+                }
+            }
+            val endTime = System.currentTimeMillis()
+
+            logger.info("ont.read completed in ${endTime - startTime} ms")
+            return mapOf(
+                "resultTime" to (endTime - startTime),
+                "successCount" to successCount,
+                "failureCount" to failureCount
+            )
+        } else {
+            logger.error("The provided path is not a valid directory.")
+            return mapOf(
+                "error" to "Invalid directory"
+            )
+        }
+    }
+
+    @GetMapping("/DefToUpdate")
+    @ResponseBody
+    fun DefToUpdate(model: Model): Map<String, Any> {
+        logger.info("User Request /DefToUpdate")
+        val pDir = "./_TUN_SensorDefReady"
+        val directory = File(pDir)
+
+        if (directory.exists() && directory.isDirectory) {
+            val files = directory.listFiles()
+            val startTime = System.currentTimeMillis() // 시간 측정 시작
+            var successCount = 0
+            var failureCount = 0
+
+            files?.forEach { file ->
+                logger.info("Read RDF => ${pDir}/${file.name}")
+                try {
+                    ont.read(file.absolutePath)
+                    successCount++
+
+                    // 파일 삭제
+                    if (file.delete()) {
+                        logger.info("Successfully deleted: ${file.name}")
+                    } else {
+                        logger.warn("Failed to delete: ${file.name}")
+                    }
+                } catch (e: RiotException) {
+                    logger.error("RiotException => ${pDir}/${file.name}")
+                    failureCount++
+                }
+            }
+            val endTime = System.currentTimeMillis()
+
+            logger.info("ont.read completed in ${endTime - startTime} ms")
+            return mapOf(
+                "resultTime" to (endTime - startTime),
+                "successCount" to successCount,
+                "failureCount" to failureCount
+            )
+        } else {
+            logger.error("The provided path is not a valid directory.")
+            return mapOf(
+                "error" to "Invalid directory"
+            )
+        }
+    }
+
+
+//=====================================================================================================
 
 
 }
