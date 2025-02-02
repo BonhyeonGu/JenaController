@@ -1,0 +1,33 @@
+PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
+PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+
+DELETE {
+    # Observation 및 관련된 모든 관계 삭제
+    ?observation ?obsP ?obsO.
+    ?s1 ?p1 ?observation.
+
+    # Result 및 관련된 모든 관계 삭제
+    ?result ?resP ?resO.
+    ?s2 ?p2 ?result.
+}
+WHERE {
+    # 옵저베이션 찾기
+    ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
+
+    # 옵저베이션 및 관련 데이터 삭제
+    OPTIONAL { ?observation ?obsP ?obsO. }
+    OPTIONAL { ?s1 ?p1 ?observation. }
+
+    # 옵저베이션이 참조하는 Result 삭제
+    OPTIONAL { 
+        ?observation sta:hasresult ?result.
+        ?result ?resP ?resO.
+    }
+    OPTIONAL { ?s2 ?p2 ?result. }
+
+    # ✅ `VALUES`를 사용하여 정확한 옵저베이션만 삭제
+    VALUES ?observation {
+        <http://example.com/observation1>
+        <http://example.com/observation2>
+    }
+}

@@ -22,6 +22,7 @@ import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.ARQ
 import org.apache.jena.sparql.util.Context
 import org.apache.jena.update.UpdateRequest
+
 //--------------------------------------------------------------------
 import org.json.JSONObject
 import java.io.File
@@ -765,6 +766,26 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return resultList
     }
     
+    fun deleteObservation(n: Int): List<String> {
+        val dataset = DatasetFactory.create(ont)
+        val queryString = queries["deleteObservation"]?.trimIndent() ?: return emptyList()
+        val modifiedQueryString = queryString.replace("{{n}}", n.toString())
+        print(modifiedQueryString)
+        // 🔹 UpdateRequest로 변환
+        val updateRequest: UpdateRequest = UpdateFactory.create(modifiedQueryString)
+        
+        // 🔹 UpdateExecution을 생성
+        val qexec = UpdateExecutionFactory.create(updateRequest, dataset)
+    
+        val startTime = System.currentTimeMillis()
+        
+        // 🔹 DELETE는 execSelect()가 아니라 execute()로 실행해야 함
+        qexec.execute()
+        
+        val endTime = System.currentTimeMillis()
+        // 실행 시간을 반환
+        return listOf((endTime - startTime).toString())
+    }
 /*
     // UPDATE SUB_Graph
     fun insertSubgraphIntoOntology(filePath: String) {
