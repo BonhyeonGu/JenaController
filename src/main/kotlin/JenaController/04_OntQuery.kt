@@ -39,7 +39,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
-        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1.3#"
+        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
         val gitURI = "https://github.com/BonhyeonGu/STA_Plugin/"
@@ -368,6 +368,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return observations
     }
 
+
     fun TESTfetchObservations(dataset: Dataset): List<Pair<String, String>> {
         val fetchObservationsQueryString = """
             PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
@@ -462,8 +463,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return ret
     }
 
-    // Debug UPDATE
-
+    // Debug Random Update
 
     fun debugUpdateRand(pName: String): Long {
         logger.info("Q:debugUpdateRand : " + pName)
@@ -766,6 +766,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         return resultList
     }
     
+//=============================================================================================
+
     fun deleteObservation(n: Int): List<String> {
         val dataset = DatasetFactory.create(ont)
         val queryString = queries["deleteObservation"]?.trimIndent() ?: return emptyList()
@@ -786,20 +788,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         // 실행 시간을 반환
         return listOf((endTime - startTime).toString())
     }
-/*
-    // UPDATE SUB_Graph
-    fun insertSubgraphIntoOntology(filePath: String) {
-        logger.info("Starting to insert subgraph from: $filePath")
 
-        val dataset = DatasetFactory.create(ont)
-        // 서브그래프 파일 불러오기
-        val subgraphModel = ModelFactory.createDefaultModel()
-        FileManager.get().readModel(subgraphModel, filePath)
-        
-        // 서브그래프를 메인 온톨로지에 추가
-        dataset.defaultModel.add(subgraphModel)
-        
-        logger.info("Subgraph from $filePath successfully inserted into the ontology.")
-    }
-        */
+
+//=============================================================================================
+
 }

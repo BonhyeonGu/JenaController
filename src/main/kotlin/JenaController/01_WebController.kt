@@ -329,7 +329,6 @@ class WebController : AutoCloseable {
         return resultStringBuilder.toString()
     }
     
-
 //=====================================================================================================
 
     @GetMapping("/select/bldgtype")
@@ -352,7 +351,6 @@ class WebController : AutoCloseable {
     
         return modifiedJsonResults
     }
-
 
 //=====================================================================================================
 
@@ -469,7 +467,8 @@ class WebController : AutoCloseable {
     }
 
 //=====================================================================================================
-
+    
+    //Khanh 연구원 관련
     @GetMapping("/TESTdebugUpdate")
     fun TESTdebug(model: Model): String {
         logger.info("User Request /TESTdebugUpdate")
@@ -491,7 +490,7 @@ class WebController : AutoCloseable {
     }
  
 //=====================================================================================================
-
+    /*
     @GetMapping("/UpdateTest")
     fun UpdateTest(model: Model): String {
         logger.info("User Request /UpdateTest")
@@ -510,12 +509,12 @@ class WebController : AutoCloseable {
         
         return "index"
     }
+    */
 
-//=====================================================================================================
-
+    // 적재된 것을 일괄적으로 적용함
     @GetMapping("/ReadyToUpdate")
     @ResponseBody
-    fun ReadyToUpdate(model: Model): Map<String, Any> {
+    fun readyToUpdate(model: Model): Map<String, Any> {
         logger.info("User Request /ReadyToUpdate")
         val pDir = "./_TUN_UpdateReady"
         val directory = File(pDir)
@@ -559,9 +558,10 @@ class WebController : AutoCloseable {
         }
     }
 
+    // 정의 적용
     @GetMapping("/DefToUpdate")
     @ResponseBody
-    fun DefToUpdate(model: Model): Map<String, Any> {
+    fun defToUpdate(model: Model): Map<String, Any> {
         logger.info("User Request /DefToUpdate")
         val pDir = "./_TUN_SensorDefReady"
         val directory = File(pDir)
@@ -605,6 +605,7 @@ class WebController : AutoCloseable {
         }
     }
 
+    // 옵저베이션 삭제, 구현중
     @GetMapping("/DeleteObservation/{n}")
     @ResponseBody
     fun deleteObservation(@PathVariable n: Int): Map<String, Any> {

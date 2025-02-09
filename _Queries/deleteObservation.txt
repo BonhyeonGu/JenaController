@@ -1,33 +1,36 @@
 PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
 PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 DELETE {
-    # Observation 및 관련된 모든 관계 삭제
-    ?observation ?obsP ?obsO.
-    ?s1 ?p1 ?observation.
-
-    # Result 및 관련된 모든 관계 삭제
-    ?result ?resP ?resO.
-    ?s2 ?p2 ?result.
-}
+    ?oldObservation ?obsP ?obsO .
+    ?obsO ?obsRevP ?oldObservation .
+} 
 WHERE {
-    # 옵저베이션 찾기
-    ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?observation.
+    # 1️⃣ Thing 노드 찾기
+    ?thing rdf:type tsc:Thing .
+    ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?oldObservation .
+    
+    # 2️⃣ 오래된 Observation 찾기 (100개 초과시 가장 오래된 것부터 삭제)
+    ?oldObservation sta:hasresultTime ?resultTime .
 
-    # 옵저베이션 및 관련 데이터 삭제
-    OPTIONAL { ?observation ?obsP ?obsO. }
-    OPTIONAL { ?s1 ?p1 ?observation. }
-
-    # 옵저베이션이 참조하는 Result 삭제
-    OPTIONAL { 
-        ?observation sta:hasresult ?result.
-        ?result ?resP ?resO.
+    {
+        SELECT ?thing (COUNT(?obs) AS ?obsCount)
+        WHERE {
+            ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs .
+        }
+        GROUP BY ?thing
+        HAVING (?obsCount > 100) # 100개 초과하는 Thing만 처리
     }
-    OPTIONAL { ?s2 ?p2 ?result. }
 
-    # ✅ `VALUES`를 사용하여 정확한 옵저베이션만 삭제
-    VALUES ?observation {
-        <http://example.com/observation1>
-        <http://example.com/observation2>
+    # 3️⃣ 오래된 Observation 중 가장 오래된 것들 선택 (ASC 정렬)
+    FILTER NOT EXISTS {
+        ?newerObs sta:hasresultTime ?newerTime .
+        FILTER(?newerTime < ?resultTime) # 더 새로운 Observation이 있는 경우 제외
     }
+
+    # 4️⃣ 연결된 모든 관계 탐색
+    OPTIONAL { ?oldObservation ?obsP ?obsO }
+    OPTIONAL { ?obsO ?obsRevP ?oldObservation } 
 }
+LIMIT 10  # 한 번에 최대 10개씩 삭제하여 성능 최적화
