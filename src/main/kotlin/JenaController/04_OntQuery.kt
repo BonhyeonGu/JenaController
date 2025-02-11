@@ -659,7 +659,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
 
-    fun qSelectMany(qName: String): MutableList<List<String>>  {
+    fun qSelectMany(qName: String): Pair<Double, MutableList<List<String>>>  {
         val queryString = queries[qName]?.trimIndent() ?: return mutableListOf()
     
         val query = QueryFactory.create(queryString)
@@ -715,9 +715,22 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 )
             }
         }
+
+        //이제부터 소요시간 리턴 따로함
+        else if (qName == "selectThingAll") {
+            while (resultSet.hasNext()) {
+                val qs = resultSet.nextSolution()
+                val thing = qs.getResource("thing")?.uri ?: "Unknown"
+                resultList.add(
+                    listOf(
+                        thing
+                    )
+                )
+            }
+        }
     
         qexec.close()
-        return resultList
+        return Pair(executionTime, resultList)
     }
 
     
@@ -768,25 +781,29 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     
 //=============================================================================================
 
-    fun deleteObservation(n: Int): List<String> {
+    // Delete
+
+    fun deleteObservationAllThings(n: Int): Long {
+        val timeStartAll = System.currentTimeMillis()
+        val (et, resultList) = qSelectMany("selectThingAll")
+        logger.info("deleteObservationAllThings: selectThingAll: ${et}")
+
         val dataset = DatasetFactory.create(ont)
-        val queryString = queries["deleteObservation"]?.trimIndent() ?: return emptyList()
-        val modifiedQueryString = queryString.replace("{{n}}", n.toString())
-        print(modifiedQueryString)
-        // 🔹 UpdateRequest로 변환
-        val updateRequest: UpdateRequest = UpdateFactory.create(modifiedQueryString)
-        
-        // 🔹 UpdateExecution을 생성
-        val qexec = UpdateExecutionFactory.create(updateRequest, dataset)
-    
-        val startTime = System.currentTimeMillis()
-        
-        // 🔹 DELETE는 execSelect()가 아니라 execute()로 실행해야 함
-        qexec.execute()
-        
-        val endTime = System.currentTimeMillis()
-        // 실행 시간을 반환
-        return listOf((endTime - startTime).toString())
+        val queryStr = queries["deleteObservation"]?.trimIndent() ?: return 0L
+        val modQueryStr0 = queryStr.replace("{{n}}", n.toString())
+
+        for (result in resultList) {
+            val thingUri = result[0]
+            val modQueryStr1 = modQueryStr0.replace("{{THING_URI}}", thingUri)
+            val updateRequest: UpdateRequest = UpdateFactory.create(modQueryStr1)
+            val qexec = UpdateExecutionFactory.create(updateRequest, dataset)
+            val timeS = System.currentTimeMillis()
+            qexec.execute()
+            val timeE = System.currentTimeMillis()
+            logger.info("deleteObservationAllThings: selectThingAll: ${timeE-timeS}")
+        }
+        val timeEndAll = System.currentTimeMillis()
+        return timeEndAll-timeStartAll
     }
 
 

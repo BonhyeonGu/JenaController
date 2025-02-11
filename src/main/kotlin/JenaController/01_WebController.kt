@@ -410,7 +410,7 @@ class WebController : AutoCloseable {
         }
         else if (qName == "updateSelectLevel") {
             ontQ.qUpdate("updateLevel0")
-            val resultList = ontQ.qSelectMany("selectLevel")
+            val (et, resultList) = ontQ.qSelectMany("selectLevel")
             
             val levelMap = mutableMapOf<String, MutableList<Map<String, String>>>()
         
@@ -428,7 +428,7 @@ class WebController : AutoCloseable {
             return levelMap
         }
         else if (qName == "selectRoomQ") {
-            val resultList = ontQ.qSelectMany("selectRoomQ")
+            val (et, resultList) = ontQ.qSelectMany("selectRoomQ")
             
             val roomMap = mutableMapOf<String, Map<String, Any>>() // 방 정보와 Q 값을 저장할 맵
         
@@ -490,26 +490,8 @@ class WebController : AutoCloseable {
     }
  
 //=====================================================================================================
-    /*
-    @GetMapping("/UpdateTest")
-    fun UpdateTest(model: Model): String {
-        logger.info("User Request /UpdateTest")
-        
-        // 시간 측정 시작
-        val startTime = System.currentTimeMillis()
-        
-        // RDF 파일 읽기
-        ont.read("./_Update_form/subgraph_modified_test3.rdf")
-        
-        // 시간 측정 종료
-        val endTime = System.currentTimeMillis()
-        
-        // 소요 시간 로깅
-        logger.info("ont.read completed in ${endTime - startTime} ms")
-        
-        return "index"
-    }
-    */
+
+    //RDF Update and Delete
 
     // 적재된 것을 일괄적으로 적용함
     @GetMapping("/ReadyToUpdate")
@@ -616,7 +598,6 @@ class WebController : AutoCloseable {
         )
     }
     
-
 //=====================================================================================================
 
 

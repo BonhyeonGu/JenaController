@@ -1,36 +1,28 @@
-PREFIX tsc: <http://paper.9bon.org/ontologies/smartcity/0.2#>
-PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX sta: <http://paper.9bon.org/ontologies/sensorthings/1.1.3#>
 
 DELETE {
-    ?oldObservation ?obsP ?obsO .
-    ?obsO ?obsRevP ?oldObservation .
-} 
-WHERE {
-    # 1️⃣ Thing 노드 찾기
-    ?thing rdf:type tsc:Thing .
-    ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?oldObservation .
-    
-    # 2️⃣ 오래된 Observation 찾기 (100개 초과시 가장 오래된 것부터 삭제)
-    ?oldObservation sta:hasresultTime ?resultTime .
-
-    {
-        SELECT ?thing (COUNT(?obs) AS ?obsCount)
-        WHERE {
-            ?thing tsc:hasThing/sta:hasMultiDatastream/sta:hasObservation ?obs .
-        }
-        GROUP BY ?thing
-        HAVING (?obsCount > 100) # 100개 초과하는 Thing만 처리
-    }
-
-    # 3️⃣ 오래된 Observation 중 가장 오래된 것들 선택 (ASC 정렬)
-    FILTER NOT EXISTS {
-        ?newerObs sta:hasresultTime ?newerTime .
-        FILTER(?newerTime < ?resultTime) # 더 새로운 Observation이 있는 경우 제외
-    }
-
-    # 4️⃣ 연결된 모든 관계 탐색
-    OPTIONAL { ?oldObservation ?obsP ?obsO }
-    OPTIONAL { ?obsO ?obsRevP ?oldObservation } 
+  ?oldObs ?pObs ?oObs.
+  ?sObs ?pObs2 ?oldObs.
+  ?result ?pRes ?oRes.
+  ?sRes ?pRes2 ?result.
 }
-LIMIT 10  # 한 번에 최대 10개씩 삭제하여 성능 최적화
+WHERE {
+  {
+    SELECT ?oldObs
+    WHERE {
+      {{THING_URI}} sta:hasMultiDatastream/sta:hasObservation ?oldObs .
+      ?oldObs sta:hasresultTime ?resultTime .
+    }
+    ORDER BY ASC(?resultTime)
+    LIMIT {{n}}
+  }
+
+  OPTIONAL { ?oldObs ?pObs ?oObs. }
+  OPTIONAL { ?sObs ?pObs2 ?oldObs. }
+
+  OPTIONAL {
+    ?oldObs sta:hasResult ?result.
+    OPTIONAL { ?result ?pRes ?oRes. }
+    OPTIONAL { ?sRes ?pRes2 ?result. }
+  }
+}
