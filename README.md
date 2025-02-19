@@ -3,7 +3,9 @@
 <h1>JenaController</h1>
 KBMS supporting web API-based queries and commands<br/><br/>
 
-![d](https://img.shields.io/badge/-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=FFFFFF) ![d](https://img.shields.io/badge/-SpringBoot-6DB33F?style=flat-square&logo=springboot&logoColor=FFFFFF)  ![d](https://img.shields.io/badge/-ApacheJena-61a6f0?style=flat-square&logo=1&logoColor=FFFFFF) 
+<picture><img src="https://img.shields.io/badge/-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=FFFFFF" alt="..."></picture>
+<picture><img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=flat-square&logo=springboot&logoColor=FFFFFF" alt="..."></picture>
+<picture><img src="https://img.shields.io/badge/-ApacheJena-61a6f0?style=flat-square&logo=1&logoColor=FFFFFF" alt="..."></picture>
 
 </div>
 
