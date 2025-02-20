@@ -13,17 +13,11 @@ KBMS supporting web API-based queries and commands<br/><br/>
 
 This repository is intended solely for development purposes and not for deployment. The deployment repository is managed under the authority of the [DT-DL Lab]() at Dong-A University.
 
-<div align="center">
-
-!!!
-
-</div>
-
 ## Demo
 
 <div align="center">
 
-!!!
+![Demo](https://github.com/user-attachments/assets/c9220444-66d2-4f6d-b8e3-0b1cba79f4cd)
 
 </div>
 
