@@ -592,9 +592,9 @@ class WebController : AutoCloseable {
     @ResponseBody
     fun deleteObservation(@PathVariable n: Int): Map<String, Any> {
         logger.info("User Request /DeleteObservation/$n")
-        val resultList = ontQ.deleteObservation(n)
+        val et = ontQ.deleteObservationAllThings(n)
         return mapOf(
-            "et" to resultList[0]
+            "et" to et
         )
     }
     

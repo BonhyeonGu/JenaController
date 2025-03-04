@@ -39,7 +39,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
-        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1#"
+        val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1.3#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
         val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
         val gitURI = "https://github.com/BonhyeonGu/STA_Plugin/"
@@ -659,8 +659,8 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     }
 
 
-    fun qSelectMany(qName: String): Pair<Double, MutableList<List<String>>>  {
-        val queryString = queries[qName]?.trimIndent() ?: return mutableListOf()
+    fun qSelectMany(qName: String): Pair<Long, MutableList<List<String>>>  {
+        val queryString = queries[qName]?.trimIndent() ?: return Pair(0L, mutableListOf())
     
         val query = QueryFactory.create(queryString)
         val qexec = QueryExecutionFactory.create(query, ont)
@@ -669,7 +669,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         val resultSet = qexec.execSelect()
         val endTime = System.currentTimeMillis()
     
-        val executionTime = (endTime - startTime).toString()
+        val executionTime = endTime - startTime
         val resultList: MutableList<List<String>> = mutableListOf()
     
         if (qName == "selectLevel") {
@@ -682,7 +682,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
     
                 resultList.add(
                     listOf(
-                        executionTime,
+                        executionTime.toString(),
                         level,
                         area,
                         areaName
@@ -704,7 +704,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
                 val qualityIndex = qs.getLiteral("Q")?.double ?: Double.NaN // 계산된 Q 값
                 resultList.add(
                     listOf(
-                        executionTime,
+                        executionTime.toString(),
                         buildingPart,
                         buildingPartLabel,
                         roomUri,
@@ -794,13 +794,13 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
 
         for (result in resultList) {
             val thingUri = result[0]
-            val modQueryStr1 = modQueryStr0.replace("{{THING_URI}}", thingUri)
+            val modQueryStr1 = modQueryStr0.replace("{{THING_URI}}", "<"+thingUri+">")
             val updateRequest: UpdateRequest = UpdateFactory.create(modQueryStr1)
             val qexec = UpdateExecutionFactory.create(updateRequest, dataset)
             val timeS = System.currentTimeMillis()
             qexec.execute()
             val timeE = System.currentTimeMillis()
-            logger.info("deleteObservationAllThings: selectThingAll: ${timeE-timeS}")
+            logger.info("deleteObservationAllThings: deleteObservation: ${timeE-timeS}")
         }
         val timeEndAll = System.currentTimeMillis()
         return timeEndAll-timeStartAll
