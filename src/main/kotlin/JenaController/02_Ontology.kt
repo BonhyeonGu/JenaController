@@ -9,7 +9,7 @@ import org.apache.jena.ontology.OntModelSpec
 import org.apache.jena.ontology.OntDocumentManager
 //--------------------------------------------------------------------
 import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.tdb.TDBFactory // 온메모리를 하지 않을 때 고려되어야 함
+//import org.apache.jena.tdb.TDBFactory // 온메모리를 하지 않을 때 고려되어야 함
 import org.apache.jena.reasoner.ValidityReport
 //--------------------------------------------------------------------
 import org.apache.jena.vocabulary.RDFS
@@ -24,8 +24,9 @@ class Ontology(val rule: OntModelSpec) {
         const val RDF_LOCALE = "./_RDF"
         const val OWL_LOCALE = "./_OWL"
         val OWL_LOCALES: Array<String> = arrayOf(
-            "https://paper.9bon.org/ontologies/sensorthings/1.1",
-            "https://paper.9bon.org/ontologies/smartcity/0.2"
+            "http://paper.9bon.org/ontologies/sensorthings/1.1.3",
+            //"http://paper.9bon.org/ontologies/smartcity/0.2",
+            "http://paper.9bon.org/ontologies/dtom/1.0"
         )
     }
 
@@ -53,7 +54,10 @@ class Ontology(val rule: OntModelSpec) {
             logger.info("Try read URL => $url")
             readStatusMap[url] = true
             try {
-                ontologyModel.read(url, "text/turtle")
+                val file = File(url)
+                val cleanFile = if (file.exists()) removeBOM(file) else file
+    
+                ontologyModel.read(cleanFile.toURI().toString(), "text/turtle")
                 logger.info("Read Complete, Type => Turtle")
             } catch (e: Exception) {
                 try {
@@ -97,5 +101,16 @@ class Ontology(val rule: OntModelSpec) {
         } else {
             logger.error("The provided path is not a valid directory.")
         }
+    }
+
+    private fun removeBOM(file: File): File {
+        val tempFile = File.createTempFile("cleaned_", ".ttl") // 임시 파일 생성
+        val reader = file.inputStream().reader(Charsets.UTF_8)
+        val content = reader.readText()
+        reader.close()
+    
+        tempFile.writeText(content, Charsets.UTF_8) // BOM 제거 후 저장
+        logger.info("BOM 제거 완료: ${file.name}")
+        return tempFile
     }
 }

@@ -39,7 +39,11 @@ import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.attribute.PosixFilePermissions
 //--------------------------------------------------------------------
-
+import org.w3c.dom.*
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
 
 // ./gradlew bootRun 
 @Controller
@@ -72,6 +76,8 @@ class WebController : AutoCloseable {
         }
     }
 
+//=결과출력용===============================================================================================================
+
     fun traceWrite(message: String) {
         bufferedWriter?.let {
             it.write("$message\n")
@@ -79,11 +85,13 @@ class WebController : AutoCloseable {
         }
     }
 
+    
     fun setFilePerTo777(filePath: String) {
         val path = Paths.get(filePath)
         val permissions = PosixFilePermissions.fromString("rwxrwxrwx")
         Files.setPosixFilePermissions(path, permissions)
     }
+
 
     fun copyAndClearTraceFile() {
         val sFile = File(TRACE_FILE_NAME)
@@ -96,6 +104,7 @@ class WebController : AutoCloseable {
     override fun close() {
         bufferedWriter?.close()
     }
+
 
     fun modifyJsonResults(jsonResults: String, replacementMap: MutableMap<String, String>): String {
         val jsonObject = JSONObject(jsonResults)
@@ -117,6 +126,14 @@ class WebController : AutoCloseable {
         return jsonObject.toString()
     }
 
+    @GetMapping("/traceComplite")
+    fun traceComplites(model: Model): String {
+        copyAndClearTraceFile()
+        model.addAttribute("message", "traceComplite")
+        return "index"
+    }
+
+//========================================================================================================================
 
 
     @GetMapping("/")
@@ -137,7 +154,8 @@ class WebController : AutoCloseable {
         return "index"
     }
 
-    //http://localhost:8080/browse/sta-EL_SMARTPOLE_MEDIAPOLE-W_1(scanner)+Thing_00
+
+    //Browser
     @GetMapping("/browse/{resource}")
     fun browseResource(@PathVariable resource: String, model: Model): String {
         logger.debug("User Request /browse/$resource")
@@ -210,6 +228,8 @@ class WebController : AutoCloseable {
         }
     }
 
+
+    //Query Update
     @GetMapping("/reloadQuery")
     fun reloadQuery(model: Model): String {
         logger.info("User Request /reloadQuery")
@@ -218,10 +238,13 @@ class WebController : AutoCloseable {
         return "index"
     }
 
+
+    //
     @GetMapping("/queryForm")
     fun showQueryForm(): String {
         return "queryForm"
     }
+
 
     @PostMapping("/executeQuery")
     fun executeQuery(@RequestParam sparqlQuery: String, model: Model): String {
@@ -230,6 +253,8 @@ class WebController : AutoCloseable {
         return "queryResults"
     }
 
+
+    //All Save
     @GetMapping("/save")
     fun save(model: Model): String {
         val startTime = System.currentTimeMillis()
@@ -239,6 +264,7 @@ class WebController : AutoCloseable {
         FileOutputStream(filename).use { outStream ->
             ont.write(outStream, "RDF/XML")
         }
+        fixRdfStringLiterals(filename)
         val endTime = System.currentTimeMillis()
         val executionTime = endTime - startTime
 
@@ -249,16 +275,48 @@ class WebController : AutoCloseable {
         model.addAttribute("message", "Execution time: $executionTime ms")
         return "index"
     }
+
+    fun fixRdfStringLiterals(filePath: String) {
+        val inputFile = File(filePath)
+        if (!inputFile.exists()) {
+            println("File not found: $filePath")
+            return
+        }
+    
+        val factory = DocumentBuilderFactory.newInstance()
+        factory.isNamespaceAware = true
+        val builder = factory.newDocumentBuilder()
+        val doc = builder.parse(inputFile)
+    
+        val rdfNS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        val xsdStringURI = "http://www.w3.org/2001/XMLSchema#string"
+    
+        val allElements = doc.getElementsByTagName("*")
+        for (i in 0 until allElements.length) {
+            val elem = allElements.item(i) as Element
+    
+            // 조건: 단일 텍스트 노드를 가진 요소이며, 이미 datatype이나 xml:lang이 없음
+            if (elem.childNodes.length == 1 &&
+                elem.firstChild.nodeType == Node.TEXT_NODE &&
+                !elem.hasAttributeNS(rdfNS, "datatype") &&
+                !elem.hasAttribute("xml:lang")) {
+    
+                val textContent = elem.textContent?.trim()
+                if (!textContent.isNullOrEmpty()) {
+                    // rdf:datatype 추가
+                    elem.setAttributeNS(rdfNS, "rdf:datatype", xsdStringURI)
+                }
+            }
+        }
+    
+        // 저장 (덮어쓰기)
+        val transformer = TransformerFactory.newInstance().newTransformer()
+        transformer.transform(DOMSource(doc), StreamResult(inputFile))
+    
+        println("✔ Fixed and saved RDF/XML file: $filePath")
+    }
 //=====================================================================================================
 
-    @GetMapping("/traceComplite")
-    fun traceComplites(model: Model): String {
-        copyAndClearTraceFile()
-        model.addAttribute("message", "traceComplite")
-        return "index"
-    }
-
-//===========================================
 
     @GetMapping("/select/id/{bldgname}/{type}")
     @ResponseBody

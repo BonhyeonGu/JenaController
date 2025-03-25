@@ -41,8 +41,9 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
         private val logger: Logger = LoggerFactory.getLogger(OntQuery::class.java)
         val staURI = "http://paper.9bon.org/ontologies/sensorthings/1.1.3#"
         val udURI = "https://github.com/BonhyeonGu/resources/"
-        val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"  // 새로운 URI
+        val scURI = "http://paper.9bon.org/ontologies/smartcity/0.2#"
         val gitURI = "https://github.com/BonhyeonGu/STA_Plugin/"
+        val dtomURI = "http://paper.9bon.org/ontologies/dtom/1.0#"
         val LOCALE_JSON_QUERIES = "./_Queries"
     }
     
@@ -72,6 +73,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             inp.contains(udURI) -> inp.replace(udURI, "ud-").replace("/", "$$").replace("#", "~~")
             inp.contains(scURI) -> inp.replace(scURI, "tsc-").replace("/", "$$")
             inp.contains(gitURI) -> inp.replace(gitURI, "git-").replace("/", "$$").replace("#", "~~")
+            inp.contains(dtomURI) -> inp.replace(dtomURI, "dtom-").replace("/", "$$").replace("#", "~~")
             else -> inp
         }
     }
@@ -82,6 +84,7 @@ class OntQuery(val ont: OntModel, val cache: Boolean) {
             inp.startsWith("ud-") -> inp.replace("ud-", udURI).replace("$$", "/").replace("~~", "#")
             inp.startsWith("tsc-") -> inp.replace("tsc-", scURI).replace("$$", "/")
             inp.startsWith("git-") -> inp.replace("git-", gitURI).replace("$$", "/").replace("~~", "#")
+            inp.startsWith("dtom-") -> inp.replace("dtom-", dtomURI).replace("$$", "/").replace("~~", "#")
             else -> inp
         }
     }
